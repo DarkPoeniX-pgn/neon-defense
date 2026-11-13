@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Neon Tower Defense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="ui-top">
+    <span>❤️ <b id="hp">20</b></span>
+    <span>💰 <b id="gold">120</b></span>
+    <span>🌊 Welle <b id="wave">0</b></span>
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <div id="upgrade-bar" style="display:none;">
+    <span id="sel-info">Turm St. 1</span>
+    <button class="upg" id="btn-upg" onclick="upgradeTower()">⬆️ Upgrade (60💰)</button>
+    <button class="sell" onclick="sellTower()">🗑️ Verkaufen</button>
+  </div>
+
+  <div id="ui-bottom">
+    <button class="t-btn active" id="t-laser" onclick="selectType('laser')">🔫 Laser<br><small>50💰</small></button>
+    <button class="t-btn" id="t-ice" onclick="selectType('ice')">❄️ Eis<br><small>75💰</small></button>
+    <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
+    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Welle starten</button>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
