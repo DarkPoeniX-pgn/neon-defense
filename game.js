@@ -16,7 +16,8 @@ const towerTypes = {
 };
 
 let currentMap = 0, waypoints = maps[0], hp = 20, gold = 120, wave = 0;
-let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) ||[0,0,0];
+ let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0);
+
 let buildType = 'laser', selectedTower = null, gameSpeed = 1, flashTimer = 0;
 let towers = [], enemies = [], bullets = [], spawnQueue = [], spawnTimer = 0, gameOver = false;
 
