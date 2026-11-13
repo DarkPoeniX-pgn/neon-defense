@@ -10,22 +10,24 @@
   <div id="ui-top">
     <span>❤️ <b id="hp">20</b></span>
     <span>💰 <b id="gold">120</b></span>
-    <span>🌊 Welle <b id="wave">0</b></span>
+    <span>🌊 <b id="wave">0</b> (🏆 <b id="best">0</b>)</span>
+    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x ⏩</button>
   </div>
 
   <canvas id="game"></canvas>
 
   <div id="upgrade-bar" style="display:none;">
     <span id="sel-info">Turm St. 1</span>
-    <button class="upg" id="btn-upg" onclick="upgradeTower()">⬆️ Upgrade (60💰)</button>
-    <button class="sell" onclick="sellTower()">🗑️ Verkaufen</button>
+    <button class="upg" id="btn-upg" onclick="upgradeTower()">⬆️ Upgrade</button>
+    <button class="sell" onclick="sellTower()">🗑️</button>
   </div>
 
   <div id="ui-bottom">
     <button class="t-btn active" id="t-laser" onclick="selectType('laser')">🔫 Laser<br><small>50💰</small></button>
     <button class="t-btn" id="t-ice" onclick="selectType('ice')">❄️ Eis<br><small>75💰</small></button>
     <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
-    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Welle starten</button>
+    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Luftangriff<br><small>90💰</small></button>
+    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Welle</button>
   </div>
 
   <script src="game.js"></script>
