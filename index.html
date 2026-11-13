@@ -11,10 +11,22 @@
     <span>❤️ <b id="hp">20</b></span>
     <span>💰 <b id="gold">120</b></span>
     <span>🌊 <b id="wave">0</b> (🏆 <b id="best">0</b>)</span>
+    <select id="map-sel" onchange="changeMap()">
+      <option value="0">🗺️ Karte 1</option>
+      <option value="1">🌀 Karte 2</option>
+      <option value="2">⚡ Karte 3</option>
+    </select>
     <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x ⏩</button>
   </div>
 
-  <canvas id="game"></canvas>
+  <div class="canvas-wrap">
+    <canvas id="game"></canvas>
+    <div id="gameover-overlay" style="display:none;">
+      <h2>💀 GAME OVER</h2>
+      <p>Du hast <b>Welle <span id="end-wave">0</span></b> erreicht!</p>
+      <button class="wave-btn" style="padding:12px 24px;font-size:16px;" onclick="resetGame()">🔄 Nochmal spielen</button>
+    </div>
+  </div>
 
   <div id="upgrade-bar" style="display:none;">
     <span id="sel-info">Turm St. 1</span>
@@ -26,7 +38,7 @@
     <button class="t-btn active" id="t-laser" onclick="selectType('laser')">🔫 Laser<br><small>50💰</small></button>
     <button class="t-btn" id="t-ice" onclick="selectType('ice')">❄️ Eis<br><small>75💰</small></button>
     <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
-    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Luftangriff<br><small>90💰</small></button>
+    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Bombe<br><small>90💰</small></button>
     <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Welle</button>
   </div>
 
