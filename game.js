@@ -3,17 +3,38 @@ const ctx = canvas.getContext('2d');
 const COLS = 12, ROWS = 10, TILE = 40;
 canvas.width = COLS * TILE; canvas.height = ROWS * TILE;
 
-const waypoints = [{c:0,r:1},{c:9,r:1},{c:9,r:4},{c:2,r:4},{c:2,r:7},{c:10,r:7},{c:10,r:9}];
+const maps = [
+  [{c:0,r:1},{c:9,r:1},{c:9,r:4},{c:2,r:4},{c:2,r:7},{c:10,r:7},{c:10,r:9}],
+  [{c:0,r:1},{c:10,r:1},{c:10,r:8},{c:1,r:8},{c:1,r:3},{c:8,r:3},{c:8,r:6},{c:4,r:6},{c:4,r:5}],
+  [{c:1,r:0},{c:1,r:8},{c:4,r:8},{c:4,r:1},{c:7,r:1},{c:7,r:8},{c:10,r:8},{c:10,r:1}]
+];
+
 const towerTypes = {
   laser:  { name: 'Laser',  cost: 50,  range: 115, dmg: 18, rate: 25, color: '#38bdf8', slow: 0,   splash: 0 },
   ice:    { name: 'Eis',    cost: 75,  range: 105, dmg: 8,  rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
   rocket: { name: 'Rakete', cost: 110, range: 135, dmg: 45, rate: 65, color: '#f43f5e', slow: 0,   splash: 55 }
 };
 
-let hp = 20, gold = 120, wave = 0, bestWave = Number(localStorage.getItem('tdBest')) || 0;
+let currentMap = 0, waypoints = maps[0], hp = 20, gold = 120, wave = 0;
+let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) ||;
 let buildType = 'laser', selectedTower = null, gameSpeed = 1, flashTimer = 0;
 let towers = [], enemies = [], bullets = [], spawnQueue = [], spawnTimer = 0, gameOver = false;
-document.getElementById('best').textContent = bestWave;
+
+function changeMap() {
+  currentMap = Number(document.getElementById('map-sel').value);
+  waypoints = maps[currentMap];
+  resetGame();
+}
+
+function resetGame() {
+  hp = 20; gold = 120; wave = 0; gameOver = false;
+  towers = []; enemies = []; bullets = []; spawnQueue = [];
+  selectedTower = null;
+  document.getElementById('upgrade-bar').style.display = 'none';
+  document.getElementById('gameover-overlay').style.display = 'none';
+  document.getElementById('btn-wave').disabled = false;
+  updateUI();
+}
 
 function isPathTile(c, r) {
   for (let i = 0; i < waypoints.length - 1; i++) {
@@ -32,8 +53,7 @@ function toggleSpeed() {
 
 function airstrike() {
   if (gold < 90 || !enemies.length || gameOver) return;
-  gold -= 90;
-  flashTimer = 12;
+  gold -= 90; flashTimer = 12;
   const dmg = 80 + wave * 25;
   enemies.forEach(e => e.hp -= dmg);
   updateUI();
@@ -63,7 +83,7 @@ canvas.addEventListener('click', e => {
   towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: towerTypes[buildType].cost });
   updateUI();
 });
-function updateUpgradeBar() {
+  function updateUpgradeBar() {
   if (!selectedTower) return;
   const spec = towerTypes[selectedTower.type];
   const upgCost = Math.floor(spec.cost * 0.8 * selectedTower.lvl);
@@ -92,7 +112,10 @@ function sellTower() {
 function startWave() {
   if (spawnQueue.length || enemies.length || gameOver) return;
   wave++;
-  if (wave > bestWave) { bestWave = wave; localStorage.setItem('tdBest', bestWave); }
+  if (wave > bestScores[currentMap]) {
+    bestScores[currentMap] = wave;
+    localStorage.setItem('tdBestMaps', JSON.stringify(bestScores));
+  }
   document.getElementById('btn-wave').disabled = true;
   const count = 6 + wave * 3;
   for (let i = 0; i < count; i++) {
@@ -100,7 +123,7 @@ function startWave() {
     const isFast = !isBoss && wave >= 2 && i % 4 === 0;
     const baseHp = (45 + wave * 22) * (isBoss ? 5 : isFast ? 0.7 : 1);
     spawnQueue.push({
-      x: waypoints.c * TILE + TILE / 2, y: waypoints.r * TILE + TILE / 2, wp: 1, hp: baseHp, maxHp: baseHp,
+      x: waypoints[0].c * TILE + TILE / 2, y: waypoints[0].r * TILE + TILE / 2, wp: 1, hp: baseHp, maxHp: baseHp,
       speed: isBoss ? 0.75 : isFast ? 2.1 : 1.25 + Math.min(wave * 0.04, 0.8),
       reward: isBoss ? 60 : 12 + Math.floor(wave / 2), slowTimer: 0,
       color: isBoss ? '#facc15' : isFast ? '#a855f7' : '#ef4444', radius: isBoss ? 15 : isFast ? 9 : 11
@@ -113,15 +136,16 @@ function updateUI() {
   document.getElementById('hp').textContent = hp;
   document.getElementById('gold').textContent = gold;
   document.getElementById('wave').textContent = wave;
-  document.getElementById('best').textContent = bestWave;
-  document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0;
+  document.getElementById('best').textContent = bestScores[currentMap];
+  document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0 || gameOver;
   if (selectedTower) updateUpgradeBar();
 }
 
 function step() {
+  if (gameOver) return;
   if (spawnQueue.length > 0) {
     if (--spawnTimer <= 0) { enemies.push(spawnQueue.shift()); spawnTimer = Math.max(18, 42 - wave * 2); }
-  } else if (enemies.length === 0 && !gameOver) {
+  } else if (enemies.length === 0) {
     document.getElementById('btn-wave').disabled = false;
   }
 
@@ -135,7 +159,11 @@ function step() {
     if (dist < spd) {
       if (++e.wp >= waypoints.length) {
         hp--; enemies.splice(i, 1); updateUI();
-        if (hp <= 0) { gameOver = true; alert('💀 Game Over! Welle ' + wave + ' erreicht.'); }
+        if (hp <= 0) {
+          gameOver = true;
+          document.getElementById('end-wave').textContent = wave;
+          document.getElementById('gameover-overlay').style.display = 'flex';
+        }
       }
     } else { e.x += (dx / dist) * spd; e.y += (dy / dist) * spd; }
   }
@@ -201,5 +229,7 @@ function loop() {
   updateUI();
   requestAnimationFrame(loop);
 }
+updateUI();
 loop();
-                          
+  
+  
