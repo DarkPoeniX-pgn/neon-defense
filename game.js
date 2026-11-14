@@ -21,6 +21,33 @@ let currentMap = 0, waypoints = maps.at(0), hp = 20, gold = 120, wave = 0;
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0);
 let buildType = 'laser', selectedTower = null, gameSpeed = 1, flashTimer = 0, waveRunning = false;
 let towers = new Array(), enemies = new Array(), bullets = new Array(), spawnQueue = new Array(), spawnTimer = 0, gameOver = false;
+let soundOn = true, audioCtx = null;
+
+function playSfx(type) {
+  if (!soundOn) return;
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(), now = audioCtx.currentTime;
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  if (type === 'shoot') {
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
+    gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.start(now); osc.stop(now + 0.08);
+  } else if (type === 'boom') {
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, now); osc.frequency.exponentialRampToValueAtTime(35, now + 0.25);
+    gain.gain.setValueAtTime(0.16, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.start(now); osc.stop(now + 0.25);
+  } else if (type === 'coin') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(780, now); osc.frequency.setValueAtTime(1040, now + 0.06);
+    gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc.start(now); osc.stop(now + 0.16);
+  }
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇';
+}
 
 function changeMap() {
   currentMap = Number(document.getElementById('map-sel').value);
@@ -55,15 +82,14 @@ function toggleSpeed() {
 
 function airstrike() {
   if (gold < 90 || !enemies.length || gameOver) return;
-  gold -= 90; flashTimer = 12;
+  gold -= 90; flashTimer = 12; playSfx('boom');
   const dmg = 80 + wave * 25;
   enemies.forEach(e => e.hp -= dmg);
   updateUI();
 }
 
 function selectType(type) {
-  buildType = type;
-  selectedTower = null;
+  buildType = type; selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('t-' + type);
@@ -75,39 +101,17 @@ canvas.addEventListener('click', e => {
   const rect = canvas.getBoundingClientRect();
   const c = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / TILE);
   const r = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / TILE);
-
   const existing = towers.find(t => t.c === c && t.r === r);
   if (existing) { selectedTower = existing; updateUpgradeBar(); return; }
-
   selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   const spec = towerTypes[buildType];
   if (!spec || isPathTile(c, r) || gold < spec.cost) return;
-
-  gold -= spec.cost;
+  gold -= spec.cost; playSfx('coin');
   towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: spec.cost });
   updateUI();
 });
-
-
-canvas.addEventListener('click', e => {
-  if (gameOver) return;
-  const rect = canvas.getBoundingClientRect();
-  const c = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / TILE);
-  const r = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / TILE);
-
-  const existing = towers.find(t => t.c === c && t.r === r);
-  if (existing) { selectedTower = existing; updateUpgradeBar(); return; }
-
-  selectedTower = null;
-  document.getElementById('upgrade-bar').style.display = 'none';
-  if (isPathTile(c, r) || gold < towerTypes[buildType].cost) return;
-
-  gold -= towerTypes[buildType].cost;
-  towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: towerTypes[buildType].cost });
-  updateUI();
-});
-  function updateUpgradeBar() {
+function updateUpgradeBar() {
   if (!selectedTower) return;
   const spec = towerTypes[selectedTower.type];
   const upgCost = Math.floor(spec.cost * 0.8 * selectedTower.lvl);
@@ -122,13 +126,13 @@ function upgradeTower() {
   if (!selectedTower || selectedTower.lvl >= 4) return;
   const upgCost = Math.floor(towerTypes[selectedTower.type].cost * 0.8 * selectedTower.lvl);
   if (gold < upgCost) return;
-  gold -= upgCost; selectedTower.spent += upgCost; selectedTower.lvl++;
+  gold -= upgCost; selectedTower.spent += upgCost; selectedTower.lvl++; playSfx('coin');
   updateUI(); updateUpgradeBar();
 }
 
 function sellTower() {
   if (!selectedTower) return;
-  gold += Math.floor(selectedTower.spent * 0.7);
+  gold += Math.floor(selectedTower.spent * 0.7); playSfx('coin');
   towers = towers.filter(t => t !== selectedTower);
   selectedTower = null; document.getElementById('upgrade-bar').style.display = 'none';
   updateUI();
@@ -145,13 +149,18 @@ function startWave() {
   const count = 6 + wave * 3;
   for (let i = 0; i < count; i++) {
     const isBoss = wave % 5 === 0 && i === count - 1;
-    const isFast = !isBoss && wave >= 2 && i % 4 === 0;
-    const baseHp = (45 + wave * 22) * (isBoss ? 5 : isFast ? 0.7 : 1);
+    const isHealer = !isBoss && wave >= 4 && i % 6 === 5;
+    const isTank = !isBoss && !isHealer && wave >= 3 && i % 5 === 3;
+    const isFast = !isBoss && !isHealer && !isTank && wave >= 2 && i % 4 === 0;
+    const mult = isBoss ? 5 : isTank ? 2.4 : isFast ? 0.7 : 1;
+    const baseHp = (45 + wave * 22) * mult;
     spawnQueue.push({
       x: waypoints.at(0).c * TILE + TILE / 2, y: waypoints.at(0).r * TILE + TILE / 2, wp: 1, hp: baseHp, maxHp: baseHp,
-      speed: isBoss ? 0.75 : isFast ? 2.1 : 1.25 + Math.min(wave * 0.04, 0.8),
-      reward: isBoss ? 60 : 12 + Math.floor(wave / 2), slowTimer: 0,
-      color: isBoss ? '#facc15' : isFast ? '#a855f7' : '#ef4444', radius: isBoss ? 15 : isFast ? 9 : 11
+      speed: isBoss ? 0.75 : isTank ? 0.85 : isFast ? 2.1 : 1.25 + Math.min(wave * 0.04, 0.8),
+      reward: isBoss ? 60 : isTank ? 22 : 12 + Math.floor(wave / 2), slowTimer: 0,
+      armor: isTank ? 0.5 : 1, healer: isHealer, healCd: 90,
+      color: isBoss ? '#facc15' : isHealer ? '#ec4899' : isTank ? '#3b82f6' : isFast ? '#a855f7' : '#ef4444',
+      radius: isBoss ? 15 : isTank ? 13 : isFast ? 9 : 11
     });
   }
   updateUI();
@@ -163,7 +172,7 @@ function updateUI() {
   document.getElementById('wave').textContent = wave;
   document.getElementById('best').textContent = bestScores.at(currentMap);
   document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0 || gameOver;
-  ['laser', 'ice', 'sniper', 'rocket', 'mine'].forEach(t => {
+  new Array('laser', 'ice', 'sniper', 'rocket', 'mine').forEach(t => {
     document.getElementById('t-' + t).style.opacity = gold < towerTypes[t].cost ? '0.4' : '1';
   });
   if (selectedTower) updateUpgradeBar();
@@ -176,13 +185,21 @@ function step() {
   } else if (enemies.length === 0 && waveRunning) {
     waveRunning = false;
     document.getElementById('btn-wave').disabled = false;
-    towers.forEach(t => { if (t.type === 'mine') gold += 35 * t.lvl; });
+    let mined = 0;
+    towers.forEach(t => { if (t.type === 'mine') mined += 35 * t.lvl; });
+    if (mined > 0) { gold += mined; playSfx('coin'); }
     updateUI();
   }
 
   for (let i = enemies.length - 1; i >= 0; i--) {
     let e = enemies.at(i);
     if (e.slowTimer > 0) e.slowTimer--;
+    if (e.healer && --e.healCd <= 0) {
+      e.healCd = 110;
+      enemies.forEach(other => {
+        if (Math.hypot(other.x - e.x, other.y - e.y) <= 75) other.hp = Math.min(other.maxHp, other.hp + other.maxHp * 0.12);
+      });
+    }
     let spd = e.speed * (e.slowTimer > 0 ? 0.5 : 1);
     let target = waypoints.at(e.wp);
     let tx = target.c * TILE + TILE / 2, ty = target.r * TILE + TILE / 2;
@@ -208,21 +225,27 @@ function step() {
     const target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) <= range);
     if (target) {
       t.cd = Math.max(8, spec.rate - (t.lvl - 1) * 3);
-      bullets.push({ x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow, splash: spec.splash });
+      playSfx('shoot');
+      bullets.push({ x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow, splash: spec.splash, pierce: t.type === 'sniper' });
     }
   });
 
   for (let i = bullets.length - 1; i >= 0; i--) {
     let b = bullets.at(i), dx = b.target.x - b.x, dy = b.target.y - b.y, dist = Math.hypot(dx, dy);
     if (dist < 10) {
-      if (b.splash > 0) enemies.forEach(e => { if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) e.hp -= b.dmg; });
-      else { b.target.hp -= b.dmg; if (b.slow > 0) b.target.slowTimer = 90; }
+      if (b.splash > 0) {
+        playSfx('boom');
+        enemies.forEach(e => { if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) e.hp -= b.dmg; });
+      } else {
+        b.target.hp -= b.dmg * (b.pierce ? 1 : b.target.armor);
+        if (b.slow > 0) b.target.slowTimer = 90;
+      }
       bullets.splice(i, 1);
     } else { b.x += (dx / dist) * 8; b.y += (dy / dist) * 8; }
   }
 
   for (let i = enemies.length - 1; i >= 0; i--) {
-    if (enemies.at(i).hp <= 0) { gold += enemies.at(i).reward; enemies.splice(i, 1); updateUI(); }
+    if (enemies.at(i).hp <= 0) { gold += enemies.at(i).reward; enemies.splice(i, 1); playSfx('coin'); updateUI(); }
   }
 }
 
@@ -240,6 +263,7 @@ function draw() {
   enemies.forEach(e => {
     ctx.fillStyle = e.slowTimer > 0 ? '#67e8f9' : e.color;
     ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
+    if (e.healer) { ctx.strokeStyle = 'rgba(236, 72, 153, 0.35)'; ctx.beginPath(); ctx.arc(e.x, e.y, 75, 0, Math.PI * 2); ctx.stroke(); }
     ctx.fillStyle = '#000'; ctx.fillRect(e.x - 12, e.y - e.radius - 7, 24, 4);
     ctx.fillStyle = '#4ade80'; ctx.fillRect(e.x - 12, e.y - e.radius - 7, 24 * (e.hp / e.maxHp), 4);
   });
@@ -266,4 +290,3 @@ function loop() {
 updateUI();
 loop();
     
-
