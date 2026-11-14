@@ -1,6 +1,8 @@
 * { box-sizing: border-box; font-family: system-ui, sans-serif; user-select: none; }
 body { margin: 0; background: radial-gradient(circle at 20% 15%, #1e1b4b 0%, #090d16 45%, #04060b 100%); color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 8px; }
-#ui-top, #ui-sub { width: 100%; max-width: 480px; display: flex; justify-content: space-between; align-items: center; gap: 3px; background: rgba(19, 27, 46, 0.88); backdrop-filter: blur(8px); padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 12px; margin-bottom: 5px; }
+#ui-top, #ui-mid, #ui-sub { width: 100%; max-width: 480px; display: flex; justify-content: space-between; align-items: center; gap: 4px; background: rgba(19, 27, 46, 0.88); backdrop-filter: blur(8px); padding: 6px 10px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 13px; margin-bottom: 5px; }
+#ui-top { font-size: 14px; padding: 7px 12px; }
+
 #wave-preview { color: #93c5fd; font-weight: bold; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 select { background: #1e293b; color: #f8fafc; border: 1px solid #475569; border-radius: 6px; padding: 3px 4px; font-size: 11px; font-weight: bold; }
 .canvas-wrap { position: relative; max-width: 100%; display: flex; justify-content: center; }
