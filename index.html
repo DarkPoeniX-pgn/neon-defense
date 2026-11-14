@@ -16,6 +16,7 @@
       <option value="1">🌀 Karte 2</option>
       <option value="2">⚡ Karte 3</option>
     </select>
+    <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
     <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x ⏩</button>
   </div>
 
@@ -34,14 +35,13 @@
     <button class="sell" onclick="sellTower()">🗑️</button>
   </div>
 
-    <div id="ui-bottom">
+  <div id="ui-bottom">
     <button class="t-btn active" id="t-laser" onclick="selectType('laser')">🔫 Laser<br><small>50💰</small></button>
     <button class="t-btn" id="t-ice" onclick="selectType('ice')">❄️ Eis<br><small>75💰</small></button>
     <button class="t-btn" id="t-sniper" onclick="selectType('sniper')">🎯 Sniper<br><small>95💰</small></button>
     <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
     <button class="t-btn" id="t-mine" onclick="selectType('mine')">⛏️ Mine<br><small>100💰</small></button>
-    </div>
-  
+  </div>
 
   <div id="ui-actions">
     <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Luftangriff (90💰)</button>
