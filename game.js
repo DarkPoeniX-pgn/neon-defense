@@ -119,24 +119,29 @@ canvas.addEventListener('click', e => {
 });
 
 });
+function getUpgCost(t) {
+  return Math.floor(towerTypes[t.type].cost * Math.pow(1.55, t.lvl));
+}
+
 function updateUpgradeBar() {
   if (!selectedTower) return;
   const spec = towerTypes[selectedTower.type];
-  const upgCost = Math.floor(spec.cost * 0.8 * selectedTower.lvl);
+  const upgCost = getUpgCost(selectedTower);
   document.getElementById('upgrade-bar').style.display = 'flex';
   const extra = selectedTower.type === 'mine' ? ` (+${35 * selectedTower.lvl}💰/Welle)` : '';
   document.getElementById('sel-info').textContent = `${spec.name} St.${selectedTower.lvl}${extra}`;
-  document.getElementById('btn-upg').textContent = selectedTower.lvl >= 4 ? 'MAX' : `⬆️ +1 (${upgCost}💰)`;
-  document.getElementById('btn-upg').disabled = selectedTower.lvl >= 4 || gold < upgCost;
+  document.getElementById('btn-upg').textContent = selectedTower.lvl >= 6 ? 'MAX' : `⬆️ +1 (${upgCost}💰)`;
+  document.getElementById('btn-upg').disabled = selectedTower.lvl >= 6 || gold < upgCost;
 }
 
 function upgradeTower() {
-  if (!selectedTower || selectedTower.lvl >= 4) return;
-  const upgCost = Math.floor(towerTypes[selectedTower.type].cost * 0.8 * selectedTower.lvl);
+  if (!selectedTower || selectedTower.lvl >= 6) return;
+  const upgCost = getUpgCost(selectedTower);
   if (gold < upgCost) return;
   gold -= upgCost; selectedTower.spent += upgCost; selectedTower.lvl++; playSfx('coin');
   updateUI(); updateUpgradeBar();
 }
+
 
 function sellTower() {
   if (!selectedTower) return;
