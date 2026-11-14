@@ -155,30 +155,37 @@ function startWave() {
   if (spawnQueue.length || enemies.length || gameOver) return;
   wave++; waveRunning = true;
   if (wave > bestScores.at(currentMap)) {
-        bestScores.splice(currentMap, 1, wave);
-    
+    bestScores.splice(currentMap, 1, wave);
     localStorage.setItem('tdBestMaps', JSON.stringify(bestScores));
   }
   document.getElementById('btn-wave').disabled = true;
-  const count = 6 + wave * 3;
+  const count = Math.min(45, 6 + wave * 2);
+  const scale = (45 + wave * 24) * Math.pow(1.11, Math.max(0, wave - 4));
+
   for (let i = 0; i < count; i++) {
     const isBoss = wave % 5 === 0 && i === count - 1;
-    const isHealer = !isBoss && wave >= 4 && i % 6 === 5;
-    const isTank = !isBoss && !isHealer && wave >= 3 && i % 5 === 3;
-    const isFast = !isBoss && !isHealer && !isTank && wave >= 2 && i % 4 === 0;
-    const mult = isBoss ? 5 : isTank ? 2.4 : isFast ? 0.7 : 1;
-    const baseHp = (45 + wave * 22) * mult;
+    const isShield = !isBoss && wave >= 8 && i % 5 === 4;
+    const isHealer = !isBoss && !isShield && wave >= 4 && i % 6 === 5;
+    const isTank = !isBoss && !isShield && !isHealer && wave >= 3 && i % 5 === 3;
+    const isFast = !isBoss && !isShield && !isHealer && !isTank && wave >= 2 && i % 4 === 0;
+
+    const mult = isBoss ? 6 : isTank ? 2.6 : isShield ? 1.8 : isFast ? 0.75 : 1;
+    const baseHp = scale * mult;
+
     spawnQueue.push({
       x: waypoints.at(0).c * TILE + TILE / 2, y: waypoints.at(0).r * TILE + TILE / 2, wp: 1, hp: baseHp, maxHp: baseHp,
-      speed: isBoss ? 0.75 : isTank ? 0.85 : isFast ? 2.1 : 1.25 + Math.min(wave * 0.04, 0.8),
-      reward: isBoss ? 60 : isTank ? 22 : 12 + Math.floor(wave / 2), slowTimer: 0,
-      armor: isTank ? 0.5 : 1, healer: isHealer, healCd: 90,
-      color: isBoss ? '#facc15' : isHealer ? '#ec4899' : isTank ? '#3b82f6' : isFast ? '#a855f7' : '#ef4444',
+      speed: isBoss ? 0.8 : isTank ? 0.9 : isFast ? 2.2 : 1.3 + Math.min(wave * 0.04, 1.1),
+      reward: isBoss ? 45 : Math.min(10, 5 + Math.floor(wave / 4)), slowTimer: 0,
+      armor: isTank ? 0.45 : 1, shield: isShield, healer: isHealer, healCd: 85,
+      color: isBoss ? '#facc15' : isShield ? '#22d3ee' : isHealer ? '#ec4899' : isTank ? '#3b82f6' : isFast ? '#a855f7' : '#ef4444',
       radius: isBoss ? 15 : isTank ? 13 : isFast ? 9 : 11
     });
   }
   updateUI();
 }
+
+  
+  
 
 function updateUI() {
   document.getElementById('hp').textContent = hp;
