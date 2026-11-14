@@ -59,6 +59,7 @@ function togglePause() { paused = !paused; const b = document.getElementById('bt
 function toggleHelp() { const h = document.getElementById('help-overlay'); const open = h.style.display === 'none'; h.style.display = open ? 'flex' : 'none'; paused = open; document.getElementById('btn-pause').textContent = paused ? '▶️' : '⏸️'; }
 function changeMap() { currentMap = Number(document.getElementById('map-sel').value); waypoints = maps.at(currentMap); resetGame(); }
 function changeDiff() { diffMult = Number(document.getElementById('diff-sel').value); resetGame(); }
+
 function resetGame() {
   hp = 20; gold = 175; wave = 0; gameOver = false; waveRunning = false; paused = false;
   towers = new Array(); enemies = new Array(); bullets = new Array(); effects = new Array(); spawnQueue = new Array();
@@ -146,7 +147,7 @@ function sellTower() {
   towers = towers.filter(t => t !== selectedTower);
   selectedTower = null; document.getElementById('upgrade-bar').style.display = 'none';
   updateUI();
-    }
+                }
 function startWave() {
   if (spawnQueue.length || enemies.length || gameOver) return;
   if (paused) togglePause();
@@ -281,7 +282,7 @@ function step() {
     if (--fx.life <= 0) effects.splice(i, 1);
   }
       }
-function drawTower(t) {
+     function drawTower(t) {
   const spec = towerTypes[t.type];
   const target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) <= spec.range + (t.lvl - 1) * 16);
   const ang = target ? Math.atan2(target.y - t.y, target.x - t.x) : 0;
@@ -335,33 +336,62 @@ function drawEnemy(e) {
 
   ctx.save();
   ctx.translate(e.x, e.y);
+
+  if (e.healer) {
+    const pulse = (110 - e.healCd) / 110;
+    ctx.strokeStyle = `rgba(236, 72, 153, ${0.45 - pulse * 0.3})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, 75, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 15 + pulse * 60, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  if (e.shield) {
+    ctx.strokeStyle = '#38bdf8';
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      let a = (i * Math.PI) / 3 + gfxTick * 0.03;
+      i === 0 ? ctx.moveTo(Math.cos(a) * 16, Math.sin(a) * 16) : ctx.lineTo(Math.cos(a) * 16, Math.sin(a) * 16);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+
+  ctx.save();
   ctx.rotate(ang);
   ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 8;
 
   if (e.speed > 2) {
-    ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-9, -8); ctx.lineTo(-4, 0); ctx.lineTo(-9, 8); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-8, -8); ctx.lineTo(-4, 0); ctx.lineTo(-8, 8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath(); ctx.moveTo(-6, -4); ctx.lineTo(-15 - (gfxTick % 4), 0); ctx.lineTo(-6, 4); ctx.fill();
   } else if (e.armor < 1) {
-    ctx.fillRect(-12, -10, 24, 20); ctx.fillStyle = '#1e3a8a'; ctx.fillRect(-6, -6, 12, 12);
-    ctx.fillStyle = col; ctx.fillRect(0, -2, 15, 4);
-  } else if (e.healer) {
-    ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.fillRect(-6, -2, 12, 4); ctx.fillRect(-2, -6, 4, 12);
+    ctx.fillRect(-13, -11, 26, 22);
+    ctx.fillStyle = '#93c5fd'; ctx.fillRect(8, -11, 5, 22);
   } else if (e.radius >= 15) {
     ctx.beginPath();
     for (let i = 0; i < 8; i++) {
-      let a = (i * Math.PI) / 4, r = i % 2 === 0 ? 17 : 11;
+      let a = (i * Math.PI) / 4, r = i % 2 === 0 ? 18 : 11;
       i === 0 ? ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
     }
     ctx.closePath(); ctx.fill();
   } else {
-    ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(0, -10); ctx.lineTo(-10, 0); ctx.lineTo(0, 10); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
 
-  if (e.shield) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + 4, 0, Math.PI * 2); ctx.stroke(); ctx.lineWidth = 1; }
-  if (e.healer) { ctx.strokeStyle = 'rgba(236, 72, 153, 0.3)'; ctx.beginPath(); ctx.arc(e.x, e.y, 75, 0, Math.PI * 2); ctx.stroke(); }
-  ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(e.x - 12, e.y - e.radius - 9, 24, 4);
-  ctx.fillStyle = '#4ade80'; ctx.fillRect(e.x - 12, e.y - e.radius - 9, 24 * (e.hp / e.maxHp), 4);
+  ctx.shadowBlur = 0; ctx.textAlign = 'center';
+  if (e.healer) {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(-6, -2, 12, 4); ctx.fillRect(-2, -6, 4, 12);
+  } else if (e.armor < 1) {
+    ctx.fillStyle = '#090d16'; ctx.font = 'bold 11px sans-serif'; ctx.fillText('🛡️', 0, 4);
+  } else if (e.radius >= 15) {
+    ctx.font = '13px sans-serif'; ctx.fillText('👑', 0, 4);
+  }
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(e.x - 12, e.y - e.radius - 10, 24, 4);
+  ctx.fillStyle = '#4ade80'; ctx.fillRect(e.x - 12, e.y - e.radius - 10, 24 * (e.hp / e.maxHp), 4);
 }
 
 function draw() {
@@ -430,4 +460,4 @@ function loop() {
 }
 updateUI();
 loop();
-    
+                                          
