@@ -8,7 +8,7 @@
 </head>
 <body>
   <div id="ui-top">
-    <span>❤️ <b id="hp">20</b></span>
+    <span>❤️ <b id="hp">20</b>/<b id="max-hp">20</b></span>
     <span>💰 <b id="gold">175</b></span>
     <span>💎 <b id="gems">0</b></span>
     <span>🌊 <b id="wave">0</b> (🏆 <b id="best">0</b>)</span>
@@ -32,10 +32,12 @@
   </div>
 
   <div id="ui-sub">
-    <button class="spd-btn" id="btn-lab" onclick="toggleLab()">💎 Labor</button>
+    <button class="spd-btn" onclick="toggleShop()">🛒 Shop</button>
+    <button class="spd-btn" onclick="toggleLab()">💎 Labor</button>
+    <button class="spd-btn" onclick="toggleRank()">🏆 Rang</button>
     <button class="spd-btn" id="btn-edit" onclick="toggleEditor()">🛠️ Map</button>
     <button class="spd-btn" id="btn-auto" onclick="toggleAuto()">🔄 Auto</button>
-    <button class="spd-btn" id="btn-help" onclick="toggleHelp()">❓</button>
+    <button class="spd-btn" onclick="toggleHelp()">❓</button>
     <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
     <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
     <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
@@ -43,20 +45,43 @@
 
   <div class="canvas-wrap">
     <canvas id="game"></canvas>
+
     <div id="gameover-overlay" style="display:none;">
       <h2>💀 GAME OVER</h2>
       <p>Du hast <b>Welle <span id="end-wave">0</span></b> erreicht!</p>
       <button class="wave-btn" style="padding:12px 24px;font-size:16px;" onclick="resetGame()">🔄 Nochmal spielen</button>
     </div>
+
+    <div id="shop-overlay" style="display:none;">
+      <h3>🛒 Diamanten-Turm-Shop (<span id="shop-gems">0</span> 💎)</h3>
+      <div class="help-list" style="display:flex;flex-direction:column;gap:8px;">
+        <button class="upg" id="buy-tesla" onclick="unlockTower('tesla', 8)">⚡ Tesla-Turm (Kettenblitz, 130💰) – 8 💎</button>
+        <button class="upg" id="buy-plasma" onclick="unlockTower('plasma', 14)">☢️ Plasma-Werfer (Extrem-DPS, 180💰) – 14 💎</button>
+      </div>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:12px;" onclick="toggleShop()">Schließen</button>
+    </div>
+
     <div id="lab-overlay" style="display:none;">
       <h3>💎 Tech-Labor (<span id="lab-gems">0</span> 💎)</h3>
-      <div class="help-list" style="display:flex;flex-direction:column;gap:8px;">
+      <div class="help-list" style="display:flex;flex-direction:column;gap:7px;">
         <button class="upg" id="lab-gold" onclick="buyTech('gold')">💰 Startgold +25 (St.<span id="t-lvl-gold">0</span>) – <span id="t-cost-gold">3</span>💎</button>
         <button class="upg" id="lab-hp" onclick="buyTech('hp')">❤️ Max-Leben +5 (St.<span id="t-lvl-hp">0</span>) – <span id="t-cost-hp">3</span>💎</button>
         <button class="upg" id="lab-dmg" onclick="buyTech('dmg')">⚔️ Turmschaden +10% (St.<span id="t-lvl-dmg">0</span>) – <span id="t-cost-dmg">4</span>💎</button>
+        <button class="upg" id="lab-disc" onclick="buyTech('disc')">⬇️ Upgrade-Kosten -5% (St.<span id="t-lvl-disc">0</span>/8) – <span id="t-cost-disc">4</span>💎</button>
       </div>
-      <button class="wave-btn" style="padding:8px 20px;margin-top:12px;" onclick="toggleLab()">Fertig</button>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:10px;" onclick="toggleLab()">Fertig</button>
     </div>
+
+    <div id="rank-overlay" style="display:none;">
+      <h3>🏆 Bestenliste</h3>
+      <div style="display:flex;gap:4px;margin-bottom:8px;width:100%;max-width:320px;">
+        <input id="player-name" placeholder="Dein Name..." maxlength="14" style="flex:1;padding:6px;border-radius:6px;border:1px solid #475569;background:#0f172a;color:#fff;">
+        <button class="upg" onclick="saveName()">💾 Name</button>
+      </div>
+      <div id="rank-list" class="help-list" style="max-height:175px;overflow-y:auto;"></div>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:10px;" onclick="toggleRank()">Schließen</button>
+    </div>
+
     <div id="help-overlay" style="display:none;" onclick="toggleHelp()">
       <h3>👾 Gegner & Spezialfelder</h3>
       <div class="help-list">
@@ -84,13 +109,18 @@
     <button class="t-btn" id="t-sniper" onclick="selectType('sniper')">🎯 Sniper<br><small>95💰</small></button>
     <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
     <button class="t-btn" id="t-mine" onclick="selectType('mine')">⛏️ Bank<br><small>100💰</small></button>
+    <button class="t-btn" id="t-tesla" style="display:none;" onclick="selectType('tesla')">⚡ Tesla<br><small>130💰</small></button>
+    <button class="t-btn" id="t-plasma" style="display:none;" onclick="selectType('plasma')">☢️ Plasma<br><small>180💰</small></button>
   </div>
 
   <div id="ui-actions">
-    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Luftangriff (90💰)</button>
-    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Nächste Welle</button>
+    <button class="heal-btn" id="btn-heal" onclick="healBase()">💖 +5❤️ (120💰)</button>
+    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Bombe (90💰)</button>
+    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Welle</button>
   </div>
 
-  <script src="game.js?v=2"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>
+
+      
