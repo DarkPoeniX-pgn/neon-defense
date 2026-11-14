@@ -8,34 +8,37 @@
 </head>
 <body>
   <div id="ui-top">
-    <span>❤️<b id="hp">20</b></span>
-    <span>💰<b id="gold">175</b></span>
-    <span>💎<b id="gems">0</b></span>
-    <span>🌊<b id="wave">0</b>(🏆<b id="best">0</b>)</span>
-    <select id="map-sel" onchange="changeMap()">
-      <option value="0">🗺️ K1</option>
-      <option value="1">🌀 K2</option>
-      <option value="2">⚡ K3</option>
-      <option value="3">🛠️ Eigene</option>
-    </select>
-    <select id="diff-sel" onchange="changeDiff()">
-      <option value="0.75">🟢 Leicht</option>
-      <option value="1" selected>🟡 Normal</option>
-      <option value="1.35">🔴 Extrem</option>
-    </select>
+    <span>❤️ <b id="hp">20</b></span>
+    <span>💰 <b id="gold">175</b></span>
+    <span>💎 <b id="gems">0</b></span>
+    <span>🌊 <b id="wave">0</b> (🏆 <b id="best">0</b>)</span>
+  </div>
+
+  <div id="ui-mid">
+    <span id="wave-preview">🔮 Nächste: Späher</span>
+    <div style="display:flex;gap:4px;">
+      <select id="map-sel" onchange="changeMap()">
+        <option value="0">🗺️ K1</option>
+        <option value="1">🌀 K2</option>
+        <option value="2">⚡ K3</option>
+        <option value="3">🛠️ Eigene</option>
+      </select>
+      <select id="diff-sel" onchange="changeDiff()">
+        <option value="0.75">🟢 Leicht</option>
+        <option value="1" selected>🟡 Normal</option>
+        <option value="1.35">🔴 Extrem</option>
+      </select>
+    </div>
   </div>
 
   <div id="ui-sub">
-    <span id="wave-preview">🔮 Nächste: Späher</span>
-    <div style="display:flex;gap:3px;">
-      <button class="spd-btn" id="btn-lab" onclick="toggleLab()">💎 Labor</button>
-      <button class="spd-btn" id="btn-edit" onclick="toggleEditor()">🛠️ Bau-Map</button>
-      <button class="spd-btn" id="btn-auto" onclick="toggleAuto()">🔄 Auto</button>
-      <button class="spd-btn" id="btn-help" onclick="toggleHelp()">❓</button>
-      <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
-      <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
-      <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
-    </div>
+    <button class="spd-btn" id="btn-lab" onclick="toggleLab()">💎 Labor</button>
+    <button class="spd-btn" id="btn-edit" onclick="toggleEditor()">🛠️ Map</button>
+    <button class="spd-btn" id="btn-auto" onclick="toggleAuto()">🔄 Auto</button>
+    <button class="spd-btn" id="btn-help" onclick="toggleHelp()">❓</button>
+    <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
+    <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
+    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
   </div>
 
   <div class="canvas-wrap">
@@ -88,7 +91,6 @@
     <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Nächste Welle</button>
   </div>
 
-<script src="game.js?v=2"></script>
-  
+  <script src="game.js?v=2"></script>
 </body>
 </html>
