@@ -17,7 +17,7 @@ const towerTypes = {
   mine:   { name: 'Mine',   cost: 100, range: 0,   dmg: 0,  rate: 0,  color: '#facc15', slow: 0,   splash: 0 }
 };
 
-let currentMap = 0, waypoints = maps.at(0), hp = 20, gold = 120, wave = 0;
+let currentMap = 0, waypoints = maps.at(0), hp = 20, gold = 175, wave = 0;
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0);
 let buildType = 'laser', selectedTower = null, gameSpeed = 1, flashTimer = 0, waveRunning = false;
 let towers = new Array(), enemies = new Array(), bullets = new Array(), spawnQueue = new Array(), spawnTimer = 0, gameOver = false;
@@ -154,8 +154,9 @@ function startWave() {
     localStorage.setItem('tdBestMaps', JSON.stringify(bestScores));
   }
   document.getElementById('btn-wave').disabled = true;
-  const count = Math.min(45, 6 + wave * 2);
-  const scale = (45 + wave * 24) * Math.pow(1.11, Math.max(0, wave - 4));
+    const count = Math.min(45, 4 + wave * 2);
+  const scale = (34 + wave * 18) * Math.pow(1.10, Math.max(0, wave - 7));
+  
 
   for (let i = 0; i < count; i++) {
     const isBoss = wave % 5 === 0 && i === count - 1;
