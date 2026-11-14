@@ -12,17 +12,21 @@ const maps = new Array(
 );
 
 const towerTypes = {
-  laser:  { name: 'Laser',  cost: 50,  range: 115, dmg: 18, rate: 25, color: '#38bdf8', slow: 0,   splash: 0 },
-  ice:    { name: 'Eis',    cost: 75,  range: 105, dmg: 8,  rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
-  sniper: { name: 'Sniper', cost: 95,  range: 215, dmg: 75, rate: 85, color: '#4ade80', slow: 0,   splash: 0 },
-  rocket: { name: 'Rakete', cost: 110, range: 135, dmg: 45, rate: 65, color: '#f43f5e', slow: 0,   splash: 55 },
-  mine:   { name: 'Bank',   cost: 100, range: 0,   dmg: 0,  rate: 0,  color: '#facc15', slow: 0,   splash: 0 }
+  laser:  { name: 'Laser',  cost: 50,  range: 115, dmg: 18,  rate: 25, color: '#38bdf8', slow: 0,   splash: 0 },
+  ice:    { name: 'Eis',    cost: 75,  range: 105, dmg: 8,   rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
+  sniper: { name: 'Sniper', cost: 95,  range: 215, dmg: 75,  rate: 85, color: '#4ade80', slow: 0,   splash: 0 },
+  rocket: { name: 'Rakete', cost: 110, range: 135, dmg: 45,  rate: 65, color: '#f43f5e', slow: 0,   splash: 55 },
+  mine:   { name: 'Bank',   cost: 100, range: 0,   dmg: 0,   rate: 0,  color: '#facc15', slow: 0,   splash: 0 },
+  tesla:  { name: 'Tesla',  cost: 130, range: 130, dmg: 32,  rate: 32, color: '#c084fc', slow: 0,   splash: 0 },
+  plasma: { name: 'Plasma', cost: 180, range: 150, dmg: 110, rate: 28, color: '#fb923c', slow: 0,   splash: 0 }
 };
 
-let currentMap = 0, diffMult = 1, waypoints = maps.at(0), hp = 20, gold = 175, wave = 0;
+let currentMap = 0, diffMult = 1, waypoints = maps.at(0), hp = 20, maxHp = 20, gold = 175, wave = 0;
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0, 0);
 let gems = Number(localStorage.getItem('tdGems')) || 0;
-let tech = JSON.parse(localStorage.getItem('tdTech')) || { gold: 0, hp: 0, dmg: 0 };
+let tech = JSON.parse(localStorage.getItem('tdTech')) || { gold: 0, hp: 0, dmg: 0, disc: 0 };
+let unlocked = JSON.parse(localStorage.getItem('tdUnlocked')) || { tesla: false, plasma: false };
+let playerName = localStorage.getItem('tdName') || 'NeonCommander';
 let buildType = 'laser', selectedTower = null, gameSpeed = 1, paused = false, autoWave = false, autoCd = 0;
 let editMode = false, editPts = new Array(), flashTimer = 0, waveRunning = false, gfxTick = 0;
 let towers = new Array(), enemies = new Array(), bullets = new Array(), effects = new Array(), spawnQueue = new Array(), spawnTimer = 0, gameOver = false;
@@ -58,12 +62,48 @@ function addHitFx(x, y, dmg, color) {
     effects.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, color, life: 16, dot: true });
   }
 }
+function closeOverlays(except) {
+  new Array('lab-overlay', 'shop-overlay', 'rank-overlay', 'help-overlay').forEach(id => {
+    if (id !== except) document.getElementById(id).style.display = 'none';
+  });
+}
+
 function toggleSound() { soundOn = !soundOn; document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) playSfx('coin'); }
 function togglePause() { paused = !paused; const b = document.getElementById('btn-pause'); b.textContent = paused ? '▶️' : '⏸️'; b.classList.toggle('fast', paused); }
 function toggleAuto() { autoWave = !autoWave; document.getElementById('btn-auto').classList.toggle('fast', autoWave); }
-function toggleHelp() { const h = document.getElementById('help-overlay'); const open = h.style.display === 'none'; h.style.display = open ? 'flex' : 'none'; paused = open; }
+
+function toggleHelp() { closeOverlays('help-overlay'); const h = document.getElementById('help-overlay'); const open = h.style.display === 'none'; h.style.display = open ? 'flex' : 'none'; paused = open; }
+
+function toggleShop() {
+  closeOverlays('shop-overlay');
+  const s = document.getElementById('shop-overlay');
+  const open = s.style.display === 'none';
+  s.style.display = open ? 'flex' : 'none';
+  paused = open;
+  if (open) updateShopUI();
+}
+
+function updateShopUI() {
+  document.getElementById('shop-gems').textContent = gems;
+  const bt = document.getElementById('buy-tesla'), bp = document.getElementById('buy-plasma');
+  bt.textContent = unlocked.tesla ? '✅ Tesla-Turm freigeschaltet!' : '⚡ Tesla-Turm (Kettenblitz, 130💰) – 8 💎';
+  bt.disabled = unlocked.tesla || gems < 8;
+  bp.textContent = unlocked.plasma ? '✅ Plasma-Werfer freigeschaltet!' : '☢️ Plasma-Werfer (Extrem-DPS, 180💰) – 14 💎';
+  bp.disabled = unlocked.plasma || gems < 14;
+  document.getElementById('t-tesla').style.display = unlocked.tesla ? 'block' : 'none';
+  document.getElementById('t-plasma').style.display = unlocked.plasma ? 'block' : 'none';
+}
+
+function unlockTower(type, cost) {
+  if (unlocked[type] || gems < cost) return;
+  gems -= cost; unlocked[type] = true;
+  localStorage.setItem('tdGems', gems);
+  localStorage.setItem('tdUnlocked', JSON.stringify(unlocked));
+  playSfx('coin'); updateShopUI(); updateUI();
+}
 
 function toggleLab() {
+  closeOverlays('lab-overlay');
   const l = document.getElementById('lab-overlay');
   const open = l.style.display === 'none';
   l.style.display = open ? 'flex' : 'none';
@@ -73,43 +113,65 @@ function toggleLab() {
 
 function updateLabUI() {
   document.getElementById('lab-gems').textContent = gems;
-  new Array('gold', 'hp', 'dmg').forEach(k => {
-    const cost = (k === 'dmg' ? 4 : 3) + tech[k] * 2;
-    document.getElementById('t-lvl-' + k).textContent = tech[k];
-    document.getElementById('t-cost-' + k).textContent = cost;
-    document.getElementById('lab-' + k).disabled = gems < cost;
+  new Array('gold', 'hp', 'dmg', 'disc').forEach(k => {
+    const lvl = tech[k] || 0;
+    const isMax = k === 'disc' && lvl >= 8;
+    const cost = (k === 'dmg' || k === 'disc' ? 4 : 3) + lvl * 2;
+    document.getElementById('t-lvl-' + k).textContent = lvl;
+    document.getElementById('t-cost-' + k).textContent = isMax ? 'MAX' : cost;
+    document.getElementById('lab-' + k).disabled = isMax || gems < cost;
   });
 }
 
 function buyTech(k) {
-  const cost = (k === 'dmg' ? 4 : 3) + tech[k] * 2;
+  const lvl = tech[k] || 0;
+  if (k === 'disc' && lvl >= 8) return;
+  const cost = (k === 'dmg' || k === 'disc' ? 4 : 3) + lvl * 2;
   if (gems < cost) return;
-  gems -= cost; tech[k]++;
+  gems -= cost; tech[k] = lvl + 1;
   localStorage.setItem('tdGems', gems);
   localStorage.setItem('tdTech', JSON.stringify(tech));
   playSfx('coin'); updateLabUI();
   if (wave === 0) resetGame(); else updateUI();
 }
 
+function toggleRank() {
+  closeOverlays('rank-overlay');
+  const r = document.getElementById('rank-overlay');
+  const open = r.style.display === 'none';
+  r.style.display = open ? 'flex' : 'none';
+  paused = open;
+  if (open) { document.getElementById('player-name').value = playerName; renderRank(); }
+}
+
+function saveName() {
+  const val = document.getElementById('player-name').value.trim();
+  if (val) { playerName = val; localStorage.setItem('tdName', playerName); playSfx('coin'); renderRank(); }
+}
+
+function renderRank() {
+  const myBest = Math.max(...bestScores);
+  const entries = new Array(
+    { name: 'CyberKing', w: 38 }, { name: 'Valkyrie99', w: 31 }, { name: 'NovaStriker', w: 25 },
+    { name: 'ShadowBot', w: 19 }, { name: 'RookieOne', w: 12 }, { name: playerName + ' (Du)', w: myBest, me: true }
+  ).sort((a, b) => b.w - a.w);
+  document.getElementById('rank-list').innerHTML = entries.map((e, i) =>
+    `<div style="padding:4px 6px;border-radius:6px;margin-bottom:3px;background:${e.me ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)'};display:flex;justify-content:space-between;"><span>#${i + 1} <b>${e.name}</b></span><span>🌊 Welle ${e.w}</span></div>`
+  ).join('');
+}
 function toggleEditor() {
   if (!editMode) {
     editMode = true; editPts = new Array();
-    document.getElementById('map-sel').value = '3';
-    currentMap = 3;
+    document.getElementById('map-sel').value = '3'; currentMap = 3;
     document.getElementById('btn-edit').textContent = '💾 Fertig';
     document.getElementById('btn-edit').classList.add('fast');
     alert('Tippe nacheinander auf Start- & Eckpunkte. Danach auf "💾 Fertig" tippen!');
   } else {
-    if (editPts.length >= 2) {
-      customMap = editPts;
-      maps.splice(3, 1, customMap);
-      localStorage.setItem('tdCustomMap', JSON.stringify(customMap));
-    }
+    if (editPts.length >= 2) { customMap = editPts; maps.splice(3, 1, customMap); localStorage.setItem('tdCustomMap', JSON.stringify(customMap)); }
     editMode = false;
-    document.getElementById('btn-edit').textContent = '🛠️ Bau-Map';
+    document.getElementById('btn-edit').textContent = '🛠️ Map';
     document.getElementById('btn-edit').classList.remove('fast');
-    waypoints = maps.at(3);
-    resetGame();
+    waypoints = maps.at(3); resetGame();
   }
 }
 
@@ -129,17 +191,20 @@ function genFeatures() {
 }
 
 function resetGame() {
-  hp = 20 + tech.hp * 5;
-  gold = 175 + tech.gold * 25;
+  maxHp = 20 + (tech.hp || 0) * 5;
+  hp = maxHp;
+  gold = 175 + (tech.gold || 0) * 25;
   wave = 0; gameOver = false; waveRunning = false; paused = false; autoCd = 0;
   towers = new Array(); enemies = new Array(); bullets = new Array(); effects = new Array(); spawnQueue = new Array();
-  selectedTower = null; genFeatures();
+  selectedTower = null; genFeatures(); updateShopUI();
+  closeOverlays('');
   document.getElementById('upgrade-bar').style.display = 'none';
   document.getElementById('gameover-overlay').style.display = 'none';
   document.getElementById('btn-wave').disabled = false;
   document.getElementById('btn-pause').textContent = '⏸️';
   updatePreview(); updateUI();
 }
+
 function isPathTile(c, r) {
   for (let i = 0; i < waypoints.length - 1; i++) {
     let a = waypoints.at(i), b = waypoints.at(i + 1);
@@ -155,6 +220,15 @@ function toggleSpeed() {
   btn.classList.toggle('fast', gameSpeed === 2);
 }
 
+function healBase() {
+  if (gold < 120 || hp >= maxHp || gameOver || paused) return;
+  gold -= 120;
+  hp = Math.min(maxHp, hp + 5);
+  playSfx('coin');
+  addHitFx(waypoints.at(waypoints.length - 1).c * TILE + 20, waypoints.at(waypoints.length - 1).r * TILE + 10, 5, '#4ade80');
+  updateUI();
+}
+
 function airstrike() {
   if (gold < 90 || !enemies.length || gameOver || paused) return;
   gold -= 90; flashTimer = 12; playSfx('boom');
@@ -162,7 +236,6 @@ function airstrike() {
   enemies.forEach(e => { e.hp -= dmg; addHitFx(e.x, e.y, dmg, '#c084fc'); });
   updateUI();
 }
-
 function selectType(type) {
   buildType = type; selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
@@ -206,7 +279,10 @@ canvas.addEventListener('click', e => {
   updateUI();
 });
 
-function getUpgCost(t) { return Math.floor(towerTypes[t.type].cost * Math.pow(1.55, t.lvl)); }
+function getUpgCost(t) {
+  const disc = 1 - Math.min(0.4, (tech.disc || 0) * 0.05);
+  return Math.floor(towerTypes[t.type].cost * Math.pow(1.55, t.lvl) * disc);
+}
 
 function updateUpgradeBar() {
   if (!selectedTower) return;
@@ -246,6 +322,7 @@ function updatePreview() {
   else txt += '🔴 Späher-Trupp';
   document.getElementById('wave-preview').textContent = txt;
 }
+
 function startWave() {
   if (spawnQueue.length || enemies.length || gameOver || editMode) return;
   if (paused) togglePause();
@@ -278,16 +355,18 @@ function startWave() {
   }
   updateUI();
 }
-
 function updateUI() {
   document.getElementById('hp').textContent = hp;
+  document.getElementById('max-hp').textContent = maxHp;
   document.getElementById('gold').textContent = gold;
   document.getElementById('gems').textContent = gems;
   document.getElementById('wave').textContent = wave;
   document.getElementById('best').textContent = bestScores.at(currentMap);
+  document.getElementById('btn-heal').disabled = gold < 120 || hp >= maxHp || gameOver || paused;
   document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0 || gameOver || paused;
-  new Array('laser', 'ice', 'sniper', 'rocket', 'mine').forEach(t => {
-    document.getElementById('t-' + t).style.opacity = gold < towerTypes[t].cost ? '0.4' : '1';
+  new Array('laser', 'ice', 'sniper', 'rocket', 'mine', 'tesla', 'plasma').forEach(t => {
+    const el = document.getElementById('t-' + t);
+    if (el) el.style.opacity = gold < towerTypes[t].cost ? '0.4' : '1';
   });
   if (selectedTower) updateUpgradeBar();
 }
@@ -328,7 +407,7 @@ function step() {
     } else { e.x += (dx / dist) * spd; e.y += (dy / dist) * spd; }
   }
 
-  const dmgTech = 1 + tech.dmg * 0.1;
+  const dmgTech = 1 + (tech.dmg || 0) * 0.1;
   towers.forEach(t => {
     if (t.type === 'mine') return;
     const spec = towerTypes[t.type], range = (spec.range + (t.lvl - 1) * 16) * t.boost;
@@ -341,7 +420,10 @@ function step() {
       bullets.push({
         x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow,
         splash: spec.splash * (t.type === 'rocket' && isMax ? 1.8 : 1),
-        pierce: t.type === 'sniper', chain: t.type === 'laser' && isMax, superFreeze: t.type === 'ice' && isMax
+        pierce: t.type === 'sniper' || t.type === 'plasma',
+        chain: (t.type === 'laser' && isMax) || t.type === 'tesla',
+        chainCount: t.type === 'tesla' ? (isMax ? 4 : 2) : 1,
+        superFreeze: t.type === 'ice' && isMax
       });
     }
   });
@@ -361,8 +443,12 @@ function step() {
         b.target.hp -= dealt; addHitFx(b.target.x, b.target.y, dealt, b.color);
         if (b.slow > 0) { b.target.slowTimer = b.superFreeze ? 180 : 90; if (b.superFreeze) b.target.armor = Math.min(1, b.target.armor + 0.15); }
         if (b.chain) {
-          const second = enemies.find(e => e !== b.target && Math.hypot(e.x - b.target.x, e.y - b.target.y) <= 85);
-          if (second) { second.hp -= dealt * 0.7; addHitFx(second.x, second.y, dealt * 0.7, '#facc15'); }
+          let hits = 0, last = b.target;
+          enemies.forEach(e => {
+            if (hits < b.chainCount && e !== last && Math.hypot(e.x - last.x, e.y - last.y) <= 95) {
+              e.hp -= dealt * 0.75; addHitFx(e.x, e.y, dealt * 0.75, '#c084fc'); last = e; hits++;
+            }
+          });
         }
       }
       bullets.splice(i, 1);
@@ -384,8 +470,8 @@ function step() {
     fx.y += fx.vy;
     if (--fx.life <= 0) effects.splice(i, 1);
   }
-                               }
-      function drawTower(t) {
+                          }
+function drawTower(t) {
   const spec = towerTypes[t.type];
   const target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) <= (spec.range + (t.lvl - 1) * 16) * t.boost);
   const ang = target ? Math.atan2(target.y - t.y, target.x - t.x) : 0;
@@ -404,6 +490,8 @@ function step() {
     else if (t.type === 'ice') { for (let i = 0; i < 6; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(0, -2.5); ctx.lineTo(14, 0); ctx.lineTo(0, 2.5); ctx.fill(); } ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill(); }
     else if (t.type === 'sniper') { ctx.fillRect(0, -2.5, 22, 5); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.stroke(); }
     else if (t.type === 'rocket') { ctx.fillRect(-7, -10, 18, 7); ctx.fillRect(-7, 3, 18, 7); ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.moveTo(15, -6.5); ctx.lineTo(10, -10); ctx.lineTo(10, -3); ctx.fill(); ctx.beginPath(); ctx.moveTo(15, 6.5); ctx.lineTo(10, 3); ctx.lineTo(10, 10); ctx.fill(); }
+    else if (t.type === 'tesla') { ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.stroke(); }
+    else if (t.type === 'plasma') { ctx.fillRect(-4, -7, 22, 14); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(6, 0, 5, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
   }
   ctx.fillStyle = t.lvl >= 6 ? '#facc15' : '#090d16'; ctx.beginPath(); ctx.arc(t.x + 11, t.y + 11, 6.5, 0, Math.PI * 2); ctx.fill();
@@ -434,12 +522,12 @@ function drawEnemy(e) {
   ctx.restore();
   ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(e.x - 12, e.y - e.radius - 10, 24, 4);
   ctx.fillStyle = '#4ade80'; ctx.fillRect(e.x - 12, e.y - e.radius - 10, 24 * (e.hp / e.maxHp), 4);
-    }
+}
+
 function draw() {
   if (!paused) gfxTick++;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   bgStars.forEach(s => { ctx.fillStyle = `rgba(148, 163, 184, ${0.25 + Math.sin(gfxTick * 0.03 + s.a * 6) * 0.2})`; ctx.fillRect(s.x, s.y, s.r, s.r); });
-
   const pts = editMode ? editPts : waypoints;
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -447,12 +535,10 @@ function draw() {
       ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)'; ctx.strokeRect(c * TILE, r * TILE, TILE, TILE);
     }
   }
-
   if (!editMode) {
     pads.forEach(p => { ctx.fillStyle = 'rgba(250, 204, 21, 0.14)'; ctx.fillRect(p.c * TILE + 3, p.r * TILE + 3, TILE - 6, TILE - 6); ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⚡', p.c * TILE + 20, p.r * TILE + 25); });
     rocks.forEach(rk => { ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(rk.c * TILE + 20, rk.r * TILE + 20, 14, 0, Math.PI * 2); ctx.fill(); ctx.font = '15px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🪨', rk.c * TILE + 20, rk.r * TILE + 25); });
   }
-
   if (pts.length > 0) {
     ctx.strokeStyle = editMode ? '#facc15' : 'rgba(56, 189, 248, 0.25)'; ctx.lineWidth = 3; ctx.beginPath();
     pts.forEach((w, idx) => { let wx = w.c * TILE + TILE / 2, wy = w.r * TILE + TILE / 2; idx === 0 ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy); });
@@ -461,7 +547,6 @@ function draw() {
     ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(start.c * TILE + TILE / 2, start.r * TILE + TILE / 2, 12, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(end.c * TILE + TILE / 2, end.r * TILE + TILE / 2, 13, 0, Math.PI * 2); ctx.fill();
   }
-
   enemies.forEach(drawEnemy);
   towers.forEach(t => {
     const spec = towerTypes[t.type], range = (spec.range + (t.lvl - 1) * 16) * t.boost;
@@ -480,4 +565,6 @@ function loop() {
 }
 resetGame();
 loop();
-                                                                             
+                                          
+
+  
