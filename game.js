@@ -402,7 +402,8 @@ function step() {
     if (dist < spd) {
       if (++e.wp >= waypoints.length) {
         hp--; enemies.splice(i, 1); updateUI();
-        if (hp <= 0) { gameOver = true; document.getElementById('end-wave').textContent = wave; document.getElementById('gameover-overlay').style.display = 'flex'; }
+        if (hp <= 0) { gameOver = true; document.getElementById('end-wave').textContent = wave; document.getElementById('gameover-overlay').style.display = 'flex'; addScoreToLeaderboard(wave);
+                     }
       }
     } else { e.x += (dx / dist) * spd; e.y += (dy / dist) * spd; }
   }
