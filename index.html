@@ -8,9 +8,9 @@
 </head>
 <body>
   <div id="ui-top">
-    <span>❤️ <b id="hp">20</b></span>
-    <span>💰 <b id="gold">175</b></span>
-    <span>🌊 <b id="wave">0</b> (🏆 <b id="best">0</b>)</span>
+    <span>❤️<b id="hp">20</b></span>
+    <span>💰<b id="gold">175</b></span>
+    <span>🌊<b id="wave">0</b>(🏆<b id="best">0</b>)</span>
     <select id="map-sel" onchange="changeMap()">
       <option value="0">🗺️ K1</option>
       <option value="1">🌀 K2</option>
@@ -21,7 +21,9 @@
       <option value="1" selected>🟡 Normal</option>
       <option value="1.35">🔴 Extrem</option>
     </select>
+    <button class="spd-btn" id="btn-help" onclick="toggleHelp()">❓</button>
     <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
+    <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
     <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
   </div>
 
@@ -31,6 +33,20 @@
       <h2>💀 GAME OVER</h2>
       <p>Du hast <b>Welle <span id="end-wave">0</span></b> erreicht!</p>
       <button class="wave-btn" style="padding:12px 24px;font-size:16px;" onclick="resetGame()">🔄 Nochmal spielen</button>
+    </div>
+    <div id="help-overlay" style="display:none;" onclick="toggleHelp()">
+      <h3>👾 Gegner & Stufe-6-Kräfte</h3>
+      <div class="help-list">
+        <div>🔴 <b>Raute (Normal):</b> Standard-Einheit.</div>
+        <div>🟣 <b>Pfeil (Sprinter):</b> Sehr schnell, wenig Leben.</div>
+        <div>🔵 <b>Panzer (Tank):</b> 55% Rüstung – nutze 🎯 Sniper!</div>
+        <div>🩷 <b>Kreuz (Heiler):</b> Heilt Gruppe – zuerst ausschalten!</div>
+        <div>💠 <b>Weißer Ring (Schild):</b> Blockt Raketen – nutze 🎯/🔫!</div>
+        <div>🟡 <b>Stern (Boss):</b> Alle 5 Wellen, extrem stark.</div>
+        <hr style="border-color:#334155;width:100%;">
+        <div>⭐ <b>Turm St. 6:</b> Schaltet Kettenblitz, Doppel-Frost, Krit-Treffer oder Mega-Explosion frei!</div>
+      </div>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:10px;">Schließen</button>
     </div>
   </div>
 
@@ -45,7 +61,7 @@
     <button class="t-btn" id="t-ice" onclick="selectType('ice')">❄️ Eis<br><small>75💰</small></button>
     <button class="t-btn" id="t-sniper" onclick="selectType('sniper')">🎯 Sniper<br><small>95💰</small></button>
     <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
-    <button class="t-btn" id="t-mine" onclick="selectType('mine')">⛏️ Mine<br><small>100💰</small></button>
+    <button class="t-btn" id="t-mine" onclick="selectType('mine')">⛏️ Bank<br><small>100💰</small></button>
   </div>
 
   <div id="ui-actions">
