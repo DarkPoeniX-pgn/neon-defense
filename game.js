@@ -14,12 +14,12 @@ const towerTypes = {
   ice:    { name: 'Eis',    cost: 75,  range: 105, dmg: 8,  rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
   sniper: { name: 'Sniper', cost: 95,  range: 215, dmg: 75, rate: 85, color: '#4ade80', slow: 0,   splash: 0 },
   rocket: { name: 'Rakete', cost: 110, range: 135, dmg: 45, rate: 65, color: '#f43f5e', slow: 0,   splash: 55 },
-  mine:   { name: 'Mine',   cost: 100, range: 0,   dmg: 0,  rate: 0,  color: '#facc15', slow: 0,   splash: 0 }
+  mine:   { name: 'Bank',   cost: 100, range: 0,   dmg: 0,  rate: 0,  color: '#facc15', slow: 0,   splash: 0 }
 };
 
 let currentMap = 0, diffMult = 1, waypoints = maps.at(0), hp = 20, gold = 175, wave = 0;
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0);
-let buildType = 'laser', selectedTower = null, gameSpeed = 1, flashTimer = 0, waveRunning = false, gfxTick = 0;
+let buildType = 'laser', selectedTower = null, gameSpeed = 1, paused = false, flashTimer = 0, waveRunning = false, gfxTick = 0;
 let towers = new Array(), enemies = new Array(), bullets = new Array(), effects = new Array(), spawnQueue = new Array(), spawnTimer = 0, gameOver = false;
 let soundOn = true, audioCtx = null;
 
@@ -55,15 +55,19 @@ function addHitFx(x, y, dmg, color) {
 }
 
 function toggleSound() { soundOn = !soundOn; document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) playSfx('coin'); }
+function togglePause() { paused = !paused; const b = document.getElementById('btn-pause'); b.textContent = paused ? '▶️' : '⏸️'; b.classList.toggle('fast', paused); }
+function toggleHelp() { const h = document.getElementById('help-overlay'); const open = h.style.display === 'none'; h.style.display = open ? 'flex' : 'none'; paused = open; document.getElementById('btn-pause').textContent = paused ? '▶️' : '⏸️'; }
 function changeMap() { currentMap = Number(document.getElementById('map-sel').value); waypoints = maps.at(currentMap); resetGame(); }
 function changeDiff() { diffMult = Number(document.getElementById('diff-sel').value); resetGame(); }
 function resetGame() {
-  hp = 20; gold = 175; wave = 0; gameOver = false; waveRunning = false;
+  hp = 20; gold = 175; wave = 0; gameOver = false; waveRunning = false; paused = false;
   towers = new Array(); enemies = new Array(); bullets = new Array(); effects = new Array(); spawnQueue = new Array();
   selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   document.getElementById('gameover-overlay').style.display = 'none';
+  document.getElementById('help-overlay').style.display = 'none';
   document.getElementById('btn-wave').disabled = false;
+  document.getElementById('btn-pause').textContent = '⏸️';
   updateUI();
 }
 
@@ -83,7 +87,7 @@ function toggleSpeed() {
 }
 
 function airstrike() {
-  if (gold < 90 || !enemies.length || gameOver) return;
+  if (gold < 90 || !enemies.length || gameOver || paused) return;
   gold -= 90; flashTimer = 12; playSfx('boom');
   const dmg = 80 + wave * 25;
   enemies.forEach(e => { e.hp -= dmg; addHitFx(e.x, e.y, dmg, '#c084fc'); });
@@ -109,7 +113,7 @@ canvas.addEventListener('click', e => {
   document.getElementById('upgrade-bar').style.display = 'none';
   const spec = towerTypes[buildType];
   if (!spec || isPathTile(c, r) || gold < spec.cost) return;
-  if (buildType === 'mine' && towers.filter(t => t.type === 'mine').length >= 2) return alert('Maximal 2 Gold-Minen gleichzeitig erlaubt!');
+  if (buildType === 'mine' && towers.filter(t => t.type === 'mine').length >= 2) return alert('Maximal 2 Banken gleichzeitig erlaubt!');
   gold -= spec.cost; playSfx('coin');
   towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: spec.cost });
   updateUI();
@@ -121,9 +125,10 @@ function updateUpgradeBar() {
   if (!selectedTower) return;
   const spec = towerTypes[selectedTower.type], upgCost = getUpgCost(selectedTower);
   document.getElementById('upgrade-bar').style.display = 'flex';
-  const extra = selectedTower.type === 'mine' ? ` (+${35 * selectedTower.lvl}💰/Welle)` : '';
+  const maxSkill = selectedTower.lvl >= 6 ? ' ⭐MAX-KRAFT' : '';
+  const extra = selectedTower.type === 'mine' ? ` (+${selectedTower.lvl >= 6 ? 300 : 35 * selectedTower.lvl}💰)` : maxSkill;
   document.getElementById('sel-info').textContent = `${spec.name} St.${selectedTower.lvl}${extra}`;
-  document.getElementById('btn-upg').textContent = selectedTower.lvl >= 6 ? 'MAX' : `⬆️ +1 (${upgCost}💰)`;
+  document.getElementById('btn-upg').textContent = selectedTower.lvl >= 6 ? '⭐ MAX' : `⬆️ +1 (${upgCost}💰)`;
   document.getElementById('btn-upg').disabled = selectedTower.lvl >= 6 || gold < upgCost;
 }
 
@@ -144,6 +149,7 @@ function sellTower() {
     }
 function startWave() {
   if (spawnQueue.length || enemies.length || gameOver) return;
+  if (paused) togglePause();
   wave++; waveRunning = true;
   if (wave > bestScores.at(currentMap)) {
     bestScores.splice(currentMap, 1, wave);
@@ -179,7 +185,7 @@ function updateUI() {
   document.getElementById('gold').textContent = gold;
   document.getElementById('wave').textContent = wave;
   document.getElementById('best').textContent = bestScores.at(currentMap);
-  document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0 || gameOver;
+  document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0 || gameOver || paused;
   new Array('laser', 'ice', 'sniper', 'rocket', 'mine').forEach(t => {
     document.getElementById('t-' + t).style.opacity = gold < towerTypes[t].cost ? '0.4' : '1';
   });
@@ -187,14 +193,14 @@ function updateUI() {
 }
 
 function step() {
-  if (gameOver) return;
+  if (gameOver || paused) return;
   if (spawnQueue.length > 0) {
     if (--spawnTimer <= 0) { enemies.push(spawnQueue.shift()); spawnTimer = Math.max(18, 42 - wave * 2); }
   } else if (enemies.length === 0 && waveRunning) {
     waveRunning = false;
     document.getElementById('btn-wave').disabled = false;
     let mined = 0;
-    towers.forEach(t => { if (t.type === 'mine') mined += 35 * t.lvl; });
+    towers.forEach(t => { if (t.type === 'mine') mined += (t.lvl >= 6 ? 300 : 35 * t.lvl); });
     if (mined > 0) { gold += mined; playSfx('coin'); }
     updateUI();
   }
@@ -226,12 +232,18 @@ function step() {
 
   towers.forEach(t => {
     if (t.type === 'mine') return;
-    const spec = towerTypes[t.type], range = spec.range + (t.lvl - 1) * 16, dmg = spec.dmg * (1 + (t.lvl - 1) * 0.55);
+    const spec = towerTypes[t.type], range = spec.range + (t.lvl - 1) * 16;
+    const isMax = t.lvl >= 6;
+    const dmg = spec.dmg * (1 + (t.lvl - 1) * 0.55) * (t.type === 'sniper' && isMax ? 1.5 : 1);
     if (t.cd > 0) { t.cd--; return; }
     const target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) <= range);
     if (target) {
       t.cd = Math.max(8, spec.rate - (t.lvl - 1) * 3); playSfx('shoot');
-      bullets.push({ x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow, splash: spec.splash, pierce: t.type === 'sniper' });
+      bullets.push({
+        x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow,
+        splash: spec.splash * (t.type === 'rocket' && isMax ? 1.8 : 1),
+        pierce: t.type === 'sniper', chain: t.type === 'laser' && isMax, superFreeze: t.type === 'ice' && isMax
+      });
     }
   });
 
@@ -248,7 +260,11 @@ function step() {
       } else {
         let dealt = b.dmg * (b.pierce ? 1 : b.target.armor);
         b.target.hp -= dealt; addHitFx(b.target.x, b.target.y, dealt, b.color);
-        if (b.slow > 0) b.target.slowTimer = 90;
+        if (b.slow > 0) { b.target.slowTimer = b.superFreeze ? 180 : 90; if (b.superFreeze) b.target.armor = Math.min(1, b.target.armor + 0.15); }
+        if (b.chain) {
+          const second = enemies.find(e => e !== b.target && Math.hypot(e.x - b.target.x, e.y - b.target.y) <= 85);
+          if (second) { second.hp -= dealt * 0.7; addHitFx(second.x, second.y, dealt * 0.7, '#facc15'); }
+        }
       }
       bullets.splice(i, 1);
     } else { b.x += (dx / dist) * 8; b.y += (dy / dist) * 8; }
@@ -264,19 +280,23 @@ function step() {
     fx.y += fx.vy;
     if (--fx.life <= 0) effects.splice(i, 1);
   }
-}
+      }
 function drawTower(t) {
   const spec = towerTypes[t.type];
   const target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) <= spec.range + (t.lvl - 1) * 16);
   const ang = target ? Math.atan2(target.y - t.y, target.x - t.x) : 0;
+
+  if (t.lvl >= 6) {
+    ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(t.x, t.y, 18, 0, Math.PI * 2); ctx.stroke();
+  }
 
   ctx.save();
   ctx.translate(t.x, t.y);
   ctx.fillStyle = '#0f172a'; ctx.strokeStyle = spec.color; ctx.lineWidth = 2;
 
   if (t.type === 'mine') {
-    ctx.fillRect(-14, -14, 28, 28);
-    ctx.strokeRect(-14, -14, 28, 28);
+    ctx.fillRect(-14, -14, 28, 28); ctx.strokeRect(-14, -14, 28, 28);
     ctx.fillStyle = '#facc15'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('$', 0, 6);
     ctx.restore();
@@ -304,8 +324,8 @@ function drawTower(t) {
     ctx.restore();
   }
 
-  ctx.fillStyle = '#090d16'; ctx.beginPath(); ctx.arc(t.x + 11, t.y + 11, 6.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t.lvl, t.x + 11, t.y + 14);
+  ctx.fillStyle = t.lvl >= 6 ? '#facc15' : '#090d16'; ctx.beginPath(); ctx.arc(t.x + 11, t.y + 11, 6.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = t.lvl >= 6 ? '#090d16' : '#fff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(t.lvl, t.x + 11, t.y + 14);
 }
 
 function drawEnemy(e) {
@@ -345,7 +365,7 @@ function drawEnemy(e) {
 }
 
 function draw() {
-  gfxTick++;
+  if (!paused) gfxTick++;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   bgStars.forEach(s => {
@@ -396,6 +416,12 @@ function draw() {
   });
   ctx.globalAlpha = 1;
   if (flashTimer > 0) { ctx.fillStyle = `rgba(168, 85, 247, ${flashTimer * 0.04})`; ctx.fillRect(0, 0, canvas.width, canvas.height); flashTimer--; }
+
+  if (paused && document.getElementById('help-overlay').style.display === 'none') {
+    ctx.fillStyle = 'rgba(9, 13, 22, 0.55)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#facc15'; ctx.font = 'bold 26px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('⏸️ PAUSE', canvas.width / 2, canvas.height / 2);
+  }
 }
 
 function loop() {
@@ -404,4 +430,4 @@ function loop() {
 }
 updateUI();
 loop();
-      
+    
