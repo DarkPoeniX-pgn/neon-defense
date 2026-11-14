@@ -9,15 +9,20 @@
 <body>
   <div id="ui-top">
     <span>❤️ <b id="hp">20</b></span>
-    <span>💰 <b id="gold">120</b></span>
+    <span>💰 <b id="gold">175</b></span>
     <span>🌊 <b id="wave">0</b> (🏆 <b id="best">0</b>)</span>
     <select id="map-sel" onchange="changeMap()">
-      <option value="0">🗺️ Karte 1</option>
-      <option value="1">🌀 Karte 2</option>
-      <option value="2">⚡ Karte 3</option>
+      <option value="0">🗺️ K1</option>
+      <option value="1">🌀 K2</option>
+      <option value="2">⚡ K3</option>
+    </select>
+    <select id="diff-sel" onchange="changeDiff()">
+      <option value="0.75">🟢 Leicht</option>
+      <option value="1" selected>🟡 Normal</option>
+      <option value="1.35">🔴 Extrem</option>
     </select>
     <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
-    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x ⏩</button>
+    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
   </div>
 
   <div class="canvas-wrap">
