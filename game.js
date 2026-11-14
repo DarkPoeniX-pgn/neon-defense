@@ -144,7 +144,8 @@ function startWave() {
   if (spawnQueue.length || enemies.length || gameOver) return;
   wave++; waveRunning = true;
   if (wave > bestScores.at(currentMap)) {
-    bestScores[currentMap] = wave;
+        bestScores.splice(currentMap, 1, wave);
+    
     localStorage.setItem('tdBestMaps', JSON.stringify(bestScores));
   }
   document.getElementById('btn-wave').disabled = true;
