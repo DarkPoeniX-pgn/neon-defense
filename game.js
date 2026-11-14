@@ -47,7 +47,9 @@ function playSfx(type) {
 function toggleSound() {
   soundOn = !soundOn;
   document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) playSfx('coin');
 }
+
 
 function changeMap() {
   currentMap = Number(document.getElementById('map-sel').value);
