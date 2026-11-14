@@ -62,11 +62,33 @@ function airstrike() {
 }
 
 function selectType(type) {
-  buildType = type; selectedTower = null;
+  buildType = type;
+  selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('t-' + type).classList.add('active');
+  const btn = document.getElementById('t-' + type);
+  if (btn) btn.classList.add('active');
 }
+
+canvas.addEventListener('click', e => {
+  if (gameOver) return;
+  const rect = canvas.getBoundingClientRect();
+  const c = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / TILE);
+  const r = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / TILE);
+
+  const existing = towers.find(t => t.c === c && t.r === r);
+  if (existing) { selectedTower = existing; updateUpgradeBar(); return; }
+
+  selectedTower = null;
+  document.getElementById('upgrade-bar').style.display = 'none';
+  const spec = towerTypes[buildType];
+  if (!spec || isPathTile(c, r) || gold < spec.cost) return;
+
+  gold -= spec.cost;
+  towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: spec.cost });
+  updateUI();
+});
+
 
 canvas.addEventListener('click', e => {
   if (gameOver) return;
