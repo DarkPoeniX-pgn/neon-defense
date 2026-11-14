@@ -562,7 +562,78 @@ function draw() {
 function loop() {
   for (let s = 0; s < gameSpeed; s++) step();
   draw(); updateUI(); requestAnimationFrame(loop);
+}// === LOKALE BESTENLISTE (OHNE EXTERNE SEITE) ===
+const STORAGE_KEY_SCORES = "neonTD_highscores";
+const STORAGE_KEY_NAME = "neonTD_playerName";
+
+// 1. Gespeicherten Spielernamen beim Laden ins Eingabefeld schreiben
+window.addEventListener("DOMContentLoaded", () => {
+  const savedName = localStorage.getItem(STORAGE_KEY_NAME) || "";
+  const nameInput = document.getElementById("player-name");
+  if (nameInput) nameInput.value = savedName;
+  renderLeaderboard();
+});
+
+// 2. Namen speichern (wird vom Button "💾 Name" aufgerufen)
+function saveName() {
+  const nameInput = document.getElementById("player-name");
+  const name = nameInput.value.trim() || "Spieler";
+  localStorage.setItem(STORAGE_KEY_NAME, name);
+  alert("Name gespeichert: " + name);
+  renderLeaderboard();
 }
+
+// 3. Erreichte Welle in der Bestenliste speichern
+function addScoreToLeaderboard(reachedWave) {
+  if (!reachedWave || reachedWave <= 0) return;
+
+  const name = localStorage.getItem(STORAGE_KEY_NAME) || "Spieler";
+  let scores = JSON.parse(localStorage.getItem(STORAGE_KEY_SCORES)) || [];
+
+  // Neuen Eintrag hinzufügen (inkl. Datum)
+  const today = new Date().toLocaleDateString("de-DE");
+  scores.push({ name: name, wave: reachedWave, date: today });
+
+  // Nach höchster Welle sortieren und auf Top 10 begrenzen
+  scores.sort((a, b) => b.wave - a.wave);
+  scores = scores.slice(0, 10);
+
+  localStorage.setItem(STORAGE_KEY_SCORES, JSON.stringify(scores));
+  renderLeaderboard();
+}
+
+// 4. Bestenliste im HTML-Fenster (#rank-list) anzeigen
+function renderLeaderboard() {
+  const listEl = document.getElementById("rank-list");
+  if (!listEl) return;
+
+  const scores = JSON.parse(localStorage.getItem(STORAGE_KEY_SCORES)) || [];
+
+  if (scores.length === 0) {
+    listEl.innerHTML = "<div style='opacity:0.7;text-align:center;'>Noch keine Rekorde gespeichert.</div>";
+    return;
+  }
+
+  listEl.innerHTML = scores.map((entry, index) => {
+    const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
+    return `
+      <div style="display:flex;justify-content:space-between;padding:4px 6px;border-bottom:1px solid #334155;">
+        <span>${medal} <b>${entry.name}</b> <small style="opacity:0.6;">(${entry.date})</small></span>
+        <span>🌊 Welle <b>${entry.wave}</b></span>
+      </div>
+    `;
+  }).join("");
+}
+
+// 5. Öffnen/Schließen des Ranglisten-Fensters (für deinen Button "🏆 Rang")
+function toggleRank() {
+  const overlay = document.getElementById("rank-overlay");
+  if (!overlay) return;
+  const isHidden = overlay.style.display === "none" || overlay.style.display === "";
+  overlay.style.display = isHidden ? "flex" : "none";
+  if (isHidden) renderLeaderboard();
+}
+
 resetGame();
 loop();
                                           
