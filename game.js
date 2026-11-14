@@ -263,15 +263,7 @@ function step() {
         if (b.slow > 0) b.target.slowTimer = 90;
         }
   
-    let b = bullets.at(i), dx = b.target.x - b.x, dy = b.target.y - b.y, dist = Math.hypot(dx, dy);
-    if (dist < 10) {
-      if (b.splash > 0) {
-        playSfx('boom');
-        enemies.forEach(e => { if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) e.hp -= b.dmg; });
-      } else {
-        b.target.hp -= b.dmg * (b.pierce ? 1 : b.target.armor);
-        if (b.slow > 0) b.target.slowTimer = 90;
-      }
+    
       bullets.splice(i, 1);
     } else { b.x += (dx / dist) * 8; b.y += (dy / dist) * 8; }
   }
