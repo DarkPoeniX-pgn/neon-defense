@@ -170,7 +170,8 @@ function startWave() {
     spawnQueue.push({
       x: waypoints.at(0).c * TILE + TILE / 2, y: waypoints.at(0).r * TILE + TILE / 2, wp: 1, hp: baseHp, maxHp: baseHp,
       speed: isBoss ? 0.8 : isTank ? 0.9 : isFast ? 2.2 : 1.3 + Math.min(wave * 0.04, 1.1),
-      reward: isBoss ? 45 : Math.min(10, 5 + Math.floor(wave / 4)), slowTimer: 0,
+            reward: isBoss ? 50 : Math.min(14, 7 + Math.floor(wave / 3)), slowTimer: 0,
+      
       armor: isTank ? 0.45 : 1, shield: isShield, healer: isHealer, healCd: 85,
       color: isBoss ? '#facc15' : isShield ? '#22d3ee' : isHealer ? '#ec4899' : isTank ? '#3b82f6' : isFast ? '#a855f7' : '#ef4444',
       radius: isBoss ? 15 : isTank ? 13 : isFast ? 9 : 11
