@@ -287,6 +287,11 @@ function loop() {
   updateUI();
   requestAnimationFrame(loop);
 }
+document.addEventListener('touchstart', () => {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}, { once: true });
+
 updateUI();
 loop();
     
