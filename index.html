@@ -10,21 +10,32 @@
   <div id="ui-top">
     <span>❤️<b id="hp">20</b></span>
     <span>💰<b id="gold">175</b></span>
+    <span>💎<b id="gems">0</b></span>
     <span>🌊<b id="wave">0</b>(🏆<b id="best">0</b>)</span>
     <select id="map-sel" onchange="changeMap()">
       <option value="0">🗺️ K1</option>
       <option value="1">🌀 K2</option>
       <option value="2">⚡ K3</option>
+      <option value="3">🛠️ Eigene</option>
     </select>
     <select id="diff-sel" onchange="changeDiff()">
       <option value="0.75">🟢 Leicht</option>
       <option value="1" selected>🟡 Normal</option>
       <option value="1.35">🔴 Extrem</option>
     </select>
-    <button class="spd-btn" id="btn-help" onclick="toggleHelp()">❓</button>
-    <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
-    <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
-    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
+  </div>
+
+  <div id="ui-sub">
+    <span id="wave-preview">🔮 Nächste: Späher</span>
+    <div style="display:flex;gap:3px;">
+      <button class="spd-btn" id="btn-lab" onclick="toggleLab()">💎 Labor</button>
+      <button class="spd-btn" id="btn-edit" onclick="toggleEditor()">🛠️ Bau-Map</button>
+      <button class="spd-btn" id="btn-auto" onclick="toggleAuto()">🔄 Auto</button>
+      <button class="spd-btn" id="btn-help" onclick="toggleHelp()">❓</button>
+      <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
+      <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
+      <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
+    </div>
   </div>
 
   <div class="canvas-wrap">
@@ -34,17 +45,25 @@
       <p>Du hast <b>Welle <span id="end-wave">0</span></b> erreicht!</p>
       <button class="wave-btn" style="padding:12px 24px;font-size:16px;" onclick="resetGame()">🔄 Nochmal spielen</button>
     </div>
+    <div id="lab-overlay" style="display:none;">
+      <h3>💎 Tech-Labor (<span id="lab-gems">0</span> 💎)</h3>
+      <div class="help-list" style="display:flex;flex-direction:column;gap:8px;">
+        <button class="upg" id="lab-gold" onclick="buyTech('gold')">💰 Startgold +25 (St.<span id="t-lvl-gold">0</span>) – <span id="t-cost-gold">3</span>💎</button>
+        <button class="upg" id="lab-hp" onclick="buyTech('hp')">❤️ Max-Leben +5 (St.<span id="t-lvl-hp">0</span>) – <span id="t-cost-hp">3</span>💎</button>
+        <button class="upg" id="lab-dmg" onclick="buyTech('dmg')">⚔️ Turmschaden +10% (St.<span id="t-lvl-dmg">0</span>) – <span id="t-cost-dmg">4</span>💎</button>
+      </div>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:12px;" onclick="toggleLab()">Fertig</button>
+    </div>
     <div id="help-overlay" style="display:none;" onclick="toggleHelp()">
-      <h3>👾 Gegner & Stufe-6-Kräfte</h3>
+      <h3>👾 Gegner & Spezialfelder</h3>
       <div class="help-list">
-        <div>🔴 <b>Raute (Normal):</b> Standard-Einheit.</div>
-        <div>🟣 <b>Pfeil (Sprinter):</b> Sehr schnell, wenig Leben.</div>
-        <div>🔵 <b>Panzer (Tank):</b> 55% Rüstung – nutze 🎯 Sniper!</div>
-        <div>🩷 <b>Kreuz (Heiler):</b> Heilt Gruppe – zuerst ausschalten!</div>
-        <div>💠 <b>Weißer Ring (Schild):</b> Blockt Raketen – nutze 🎯/🔫!</div>
-        <div>🟡 <b>Stern (Boss):</b> Alle 5 Wellen, extrem stark.</div>
-        <hr style="border-color:#334155;width:100%;">
-        <div>⭐ <b>Turm St. 6:</b> Schaltet Kettenblitz, Doppel-Frost, Krit-Treffer oder Mega-Explosion frei!</div>
+        <div>⚡ <b>Energie-Pad:</b> +25% Schaden & Reichweite!</div>
+        <div>🪨 <b>Felsen:</b> Antippen & für 35💰 sprengen.</div>
+        <div>🟣 <b>Pfeil + Flamme:</b> Extrem schnell.</div>
+        <div>🔵 <b>Panzer 🛡️:</b> Starke Rüstung (nutze 🎯 Sniper).</div>
+        <div>🩷 <b>Kreuz + Welle:</b> Heilt nahe Gegner.</div>
+        <div>💠 <b>Sechseck-Schild:</b> Blockt Raketen-Explosionen.</div>
+        <div>🟡 <b>Krone 👑:</b> Boss (gibt +2 💎 Kristalle!).</div>
       </div>
       <button class="wave-btn" style="padding:8px 20px;margin-top:10px;">Schließen</button>
     </div>
