@@ -108,10 +108,16 @@ canvas.addEventListener('click', e => {
   selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   const spec = towerTypes[buildType];
-  if (!spec || isPathTile(c, r) || gold < spec.cost) return;
+    if (!spec || isPathTile(c, r) || gold < spec.cost) return;
+  if (buildType === 'mine' && towers.filter(t => t.type === 'mine').length >= 2) {
+    return alert('Maximal 2 Gold-Minen gleichzeitig erlaubt!');
+  }
+
   gold -= spec.cost; playSfx('coin');
   towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: spec.cost });
   updateUI();
+});
+
 });
 function updateUpgradeBar() {
   if (!selectedTower) return;
