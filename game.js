@@ -31,15 +31,15 @@ function playSfx(type) {
   osc.connect(gain); gain.connect(audioCtx.destination);
   if (type === 'shoot') {
     osc.type = 'triangle'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(140, now + 0.08);
-    gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc.start(now); osc.stop(now + 0.08);
   } else if (type === 'boom') {
     osc.type = 'sawtooth'; osc.frequency.setValueAtTime(130, now); osc.frequency.exponentialRampToValueAtTime(35, now + 0.25);
-    gain.gain.setValueAtTime(0.16, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
     osc.start(now); osc.stop(now + 0.25);
   } else if (type === 'coin') {
     osc.type = 'sine'; osc.frequency.setValueAtTime(780, now); osc.frequency.setValueAtTime(1040, now + 0.06);
-    gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
     osc.start(now); osc.stop(now + 0.16);
   }
 }
@@ -49,7 +49,6 @@ function toggleSound() {
   document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇';
   if (soundOn) playSfx('coin');
 }
-
 
 function changeMap() {
   currentMap = Number(document.getElementById('map-sel').value);
@@ -108,16 +107,13 @@ canvas.addEventListener('click', e => {
   selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   const spec = towerTypes[buildType];
-    if (!spec || isPathTile(c, r) || gold < spec.cost) return;
+  if (!spec || isPathTile(c, r) || gold < spec.cost) return;
   if (buildType === 'mine' && towers.filter(t => t.type === 'mine').length >= 2) {
     return alert('Maximal 2 Gold-Minen gleichzeitig erlaubt!');
   }
-
   gold -= spec.cost; playSfx('coin');
   towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: spec.cost });
   updateUI();
-});
-
 });
 function getUpgCost(t) {
   return Math.floor(towerTypes[t.type].cost * Math.pow(1.55, t.lvl));
@@ -141,7 +137,6 @@ function upgradeTower() {
   gold -= upgCost; selectedTower.spent += upgCost; selectedTower.lvl++; playSfx('coin');
   updateUI(); updateUpgradeBar();
 }
-
 
 function sellTower() {
   if (!selectedTower) return;
@@ -168,7 +163,6 @@ function startWave() {
     const isHealer = !isBoss && !isShield && wave >= 4 && i % 6 === 5;
     const isTank = !isBoss && !isShield && !isHealer && wave >= 3 && i % 5 === 3;
     const isFast = !isBoss && !isShield && !isHealer && !isTank && wave >= 2 && i % 4 === 0;
-
     const mult = isBoss ? 6 : isTank ? 2.6 : isShield ? 1.8 : isFast ? 0.75 : 1;
     const baseHp = scale * mult;
 
@@ -183,9 +177,6 @@ function startWave() {
   }
   updateUI();
 }
-
-  
-  
 
 function updateUI() {
   document.getElementById('hp').textContent = hp;
@@ -251,19 +242,18 @@ function step() {
     }
   });
 
-        if (b.splash > 0) {
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    let b = bullets.at(i), dx = b.target.x - b.x, dy = b.target.y - b.y, dist = Math.hypot(dx, dy);
+    if (dist < 10) {
+      if (b.splash > 0) {
         playSfx('boom');
         enemies.forEach(e => {
-          if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) {
-            e.hp -= b.dmg * (e.shield ? 0.15 : 1);
-          }
+          if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) e.hp -= b.dmg * (e.shield ? 0.15 : 1);
         });
       } else {
         b.target.hp -= b.dmg * (b.pierce ? 1 : b.target.armor);
         if (b.slow > 0) b.target.slowTimer = 90;
-        }
-  
-    
+      }
       bullets.splice(i, 1);
     } else { b.x += (dx / dist) * 8; b.y += (dy / dist) * 8; }
   }
@@ -287,6 +277,7 @@ function draw() {
   enemies.forEach(e => {
     ctx.fillStyle = e.slowTimer > 0 ? '#67e8f9' : e.color;
     ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
+    if (e.shield) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1; }
     if (e.healer) { ctx.strokeStyle = 'rgba(236, 72, 153, 0.35)'; ctx.beginPath(); ctx.arc(e.x, e.y, 75, 0, Math.PI * 2); ctx.stroke(); }
     ctx.fillStyle = '#000'; ctx.fillRect(e.x - 12, e.y - e.radius - 7, 24, 4);
     ctx.fillStyle = '#4ade80'; ctx.fillRect(e.x - 12, e.y - e.radius - 7, 24 * (e.hp / e.maxHp), 4);
@@ -311,11 +302,6 @@ function loop() {
   updateUI();
   requestAnimationFrame(loop);
 }
-document.addEventListener('touchstart', () => {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}, { once: true });
-
 updateUI();
 loop();
-    
+  
