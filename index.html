@@ -37,9 +37,14 @@
   <div id="ui-bottom">
     <button class="t-btn active" id="t-laser" onclick="selectType('laser')">🔫 Laser<br><small>50💰</small></button>
     <button class="t-btn" id="t-ice" onclick="selectType('ice')">❄️ Eis<br><small>75💰</small></button>
+    <button class="t-btn" id="t-sniper" onclick="selectType('sniper')">🎯 Sniper<br><small>95💰</small></button>
     <button class="t-btn" id="t-rocket" onclick="selectType('rocket')">🚀 Rakete<br><small>110💰</small></button>
-    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Bombe<br><small>90💰</small></button>
-    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Welle</button>
+    <button class="t-btn" id="t-mine" onclick="selectType('mine')">⛏️ Mine<br><small>100💰</small></button>
+  </div>
+
+  <div id="ui-actions">
+    <button class="nuke-btn" id="btn-nuke" onclick="airstrike()">💣 Luftangriff (90💰)</button>
+    <button class="wave-btn" id="btn-wave" onclick="startWave()">▶ Nächste Welle</button>
   </div>
 
   <script src="game.js"></script>
