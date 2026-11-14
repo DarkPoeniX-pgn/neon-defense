@@ -251,7 +251,18 @@ function step() {
     }
   });
 
-  for (let i = bullets.length - 1; i >= 0; i--) {
+        if (b.splash > 0) {
+        playSfx('boom');
+        enemies.forEach(e => {
+          if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) {
+            e.hp -= b.dmg * (e.shield ? 0.15 : 1);
+          }
+        });
+      } else {
+        b.target.hp -= b.dmg * (b.pierce ? 1 : b.target.armor);
+        if (b.slow > 0) b.target.slowTimer = 90;
+        }
+  
     let b = bullets.at(i), dx = b.target.x - b.x, dy = b.target.y - b.y, dist = Math.hypot(dx, dy);
     if (dist < 10) {
       if (b.splash > 0) {
