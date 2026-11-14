@@ -17,10 +17,10 @@ const towerTypes = {
   mine:   { name: 'Mine',   cost: 100, range: 0,   dmg: 0,  rate: 0,  color: '#facc15', slow: 0,   splash: 0 }
 };
 
-let currentMap = 0, waypoints = maps.at(0), hp = 20, gold = 175, wave = 0;
+let currentMap = 0, diffMult = 1, waypoints = maps.at(0), hp = 20, gold = 175, wave = 0;
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0);
 let buildType = 'laser', selectedTower = null, gameSpeed = 1, flashTimer = 0, waveRunning = false;
-let towers = new Array(), enemies = new Array(), bullets = new Array(), spawnQueue = new Array(), spawnTimer = 0, gameOver = false;
+let towers = new Array(), enemies = new Array(), bullets = new Array(), effects = new Array(), spawnQueue = new Array(), spawnTimer = 0, gameOver = false;
 let soundOn = true, audioCtx = null;
 
 function playSfx(type) {
@@ -44,6 +44,14 @@ function playSfx(type) {
   }
 }
 
+function addHitFx(x, y, dmg, color) {
+  effects.push({ x, y: y - 8, txt: '-' + Math.round(dmg), color, life: 28, vy: -0.7 });
+  for (let i = 0; i < 4; i++) {
+    let ang = Math.random() * Math.PI * 2, spd = 1 + Math.random() * 2;
+    effects.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, color, life: 16, dot: true });
+  }
+}
+
 function toggleSound() {
   soundOn = !soundOn;
   document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇';
@@ -56,9 +64,14 @@ function changeMap() {
   resetGame();
 }
 
+function changeDiff() {
+  diffMult = Number(document.getElementById('diff-sel').value);
+  resetGame();
+}
+
 function resetGame() {
-  hp = 20; gold = 120; wave = 0; gameOver = false; waveRunning = false;
-  towers = new Array(); enemies = new Array(); bullets = new Array(); spawnQueue = new Array();
+  hp = 20; gold = 175; wave = 0; gameOver = false; waveRunning = false;
+  towers = new Array(); enemies = new Array(); bullets = new Array(); effects = new Array(); spawnQueue = new Array();
   selectedTower = null;
   document.getElementById('upgrade-bar').style.display = 'none';
   document.getElementById('gameover-overlay').style.display = 'none';
@@ -77,7 +90,7 @@ function isPathTile(c, r) {
 function toggleSpeed() {
   gameSpeed = gameSpeed === 1 ? 2 : 1;
   const btn = document.getElementById('btn-spd');
-  btn.textContent = gameSpeed === 2 ? '2x ⏩' : '1x ⏩';
+  btn.textContent = gameSpeed === 2 ? '2x' : '1x';
   btn.classList.toggle('fast', gameSpeed === 2);
 }
 
@@ -85,7 +98,7 @@ function airstrike() {
   if (gold < 90 || !enemies.length || gameOver) return;
   gold -= 90; flashTimer = 12; playSfx('boom');
   const dmg = 80 + wave * 25;
-  enemies.forEach(e => e.hp -= dmg);
+  enemies.forEach(e => { e.hp -= dmg; addHitFx(e.x, e.y, dmg, '#c084fc'); });
   updateUI();
 }
 
@@ -154,9 +167,8 @@ function startWave() {
     localStorage.setItem('tdBestMaps', JSON.stringify(bestScores));
   }
   document.getElementById('btn-wave').disabled = true;
-    const count = Math.min(45, 4 + wave * 2);
-  const scale = (34 + wave * 18) * Math.pow(1.10, Math.max(0, wave - 7));
-  
+  const count = Math.min(45, 4 + wave * 2);
+  const scale = (34 + wave * 18) * Math.pow(1.10, Math.max(0, wave - 7)) * diffMult;
 
   for (let i = 0; i < count; i++) {
     const isBoss = wave % 5 === 0 && i === count - 1;
@@ -170,8 +182,7 @@ function startWave() {
     spawnQueue.push({
       x: waypoints.at(0).c * TILE + TILE / 2, y: waypoints.at(0).r * TILE + TILE / 2, wp: 1, hp: baseHp, maxHp: baseHp,
       speed: isBoss ? 0.8 : isTank ? 0.9 : isFast ? 2.2 : 1.3 + Math.min(wave * 0.04, 1.1),
-            reward: isBoss ? 50 : Math.min(14, 7 + Math.floor(wave / 3)), slowTimer: 0,
-      
+      reward: isBoss ? 50 : Math.min(14, 7 + Math.floor(wave / 3)), slowTimer: 0,
       armor: isTank ? 0.45 : 1, shield: isShield, healer: isHealer, healCd: 85,
       color: isBoss ? '#facc15' : isShield ? '#22d3ee' : isHealer ? '#ec4899' : isTank ? '#3b82f6' : isFast ? '#a855f7' : '#ef4444',
       radius: isBoss ? 15 : isTank ? 13 : isFast ? 9 : 11
@@ -250,10 +261,14 @@ function step() {
       if (b.splash > 0) {
         playSfx('boom');
         enemies.forEach(e => {
-          if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) e.hp -= b.dmg * (e.shield ? 0.15 : 1);
+          if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) {
+            let dealt = b.dmg * (e.shield ? 0.15 : 1);
+            e.hp -= dealt; addHitFx(e.x, e.y, dealt, b.color);
+          }
         });
       } else {
-        b.target.hp -= b.dmg * (b.pierce ? 1 : b.target.armor);
+        let dealt = b.dmg * (b.pierce ? 1 : b.target.armor);
+        b.target.hp -= dealt; addHitFx(b.target.x, b.target.y, dealt, b.color);
         if (b.slow > 0) b.target.slowTimer = 90;
       }
       bullets.splice(i, 1);
@@ -262,6 +277,13 @@ function step() {
 
   for (let i = enemies.length - 1; i >= 0; i--) {
     if (enemies.at(i).hp <= 0) { gold += enemies.at(i).reward; enemies.splice(i, 1); playSfx('coin'); updateUI(); }
+  }
+
+  for (let i = effects.length - 1; i >= 0; i--) {
+    let fx = effects.at(i);
+    if (fx.vx) fx.x += fx.vx;
+    fx.y += fx.vy;
+    if (--fx.life <= 0) effects.splice(i, 1);
   }
 }
 
@@ -295,6 +317,15 @@ function draw() {
   });
 
   bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.fill(); });
+
+  effects.forEach(fx => {
+    ctx.globalAlpha = Math.min(1, fx.life / 12);
+    ctx.fillStyle = fx.color;
+    if (fx.dot) { ctx.fillRect(fx.x, fx.y, 3, 3); }
+    else { ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(fx.txt, fx.x, fx.y); }
+  });
+  ctx.globalAlpha = 1;
+
   if (flashTimer > 0) { ctx.fillStyle = `rgba(168, 85, 247, ${flashTimer * 0.04})`; ctx.fillRect(0, 0, canvas.width, canvas.height); flashTimer--; }
 }
 
@@ -306,4 +337,5 @@ function loop() {
 }
 updateUI();
 loop();
-  
+    
+
