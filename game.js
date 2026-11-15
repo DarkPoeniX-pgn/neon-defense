@@ -559,11 +559,14 @@ function draw() {
     ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(end.c * TILE + TILE / 2, end.r * TILE + TILE / 2, 13, 0, Math.PI * 2); ctx.fill();
   }
   enemies.forEach(drawEnemy);
-  towers.forEach(t => {
-  const spec = towerTypes[t.type], range = ... // (deine unveränderte Zeile 553)
-  if (showAllRanges || (typeof sel !== 'undefined' && sel === t)) { ctx.beginPath(); ctx.arc(t.x, t.y, range, 0, Math.PI * 2); ctx.fillStyle = 'rgba(56, 189, 248, 0.14)'; ctx.fill(); ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)'; ctx.stroke(); }
-  drawTower(t);
-});
+    towers.forEach(t => {
+    const spec = towerTypes[t.type], range = (spec.range + (t.lvl - 1) * 16) * t.boost;
+    if (showAllRanges || (typeof selectedTower !== 'undefined' && selectedTower === t)) {
+      ctx.beginPath(); ctx.arc(t.x, t.y, range, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.14)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)'; ctx.stroke();
+    }
+    
   
        
     drawTower(t);
