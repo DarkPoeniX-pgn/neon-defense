@@ -664,6 +664,127 @@ document.addEventListener("fullscreenchange", () => {
   if (btn) btn.textContent = document.fullscreenElement ? "✖" : "⛶";
 });
 
+// === 1. ALLE REICHWEITEN ANZEIGEN (👁️ KNOPF) ===
+let showAllRanges = false;
+
+function toggleAllRanges() {
+  showAllRanges = !showAllRanges;
+  const btn = document.getElementById("btn-ranges");
+  if (btn) btn.style.background = showAllRanges ? "#0284c7" : "";
+}
+
+// === 2. ERFOLGE & TÄGLICHE AUFGABEN (🏅 ZIELE) ===
+const QUEST_STORAGE = "neonTD_quests_v1";
+
+function getQuestData() {
+  const today = new Date().toLocaleDateString("de-DE");
+  let data = JSON.parse(localStorage.getItem(QUEST_STORAGE));
+
+  // Initialisieren oder tägliche Aufgaben am neuen Tag zurücksetzen
+  if (!data) {
+    data = {
+      lastDay: today,
+      stats: { totalKills: 0, totalTowers: 0, maxWave: 0 },
+      daily: { kills: 0, waves: 0 },
+      claimed: {}
+    };
+  } else if (data.lastDay !== today) {
+    data.lastDay = today;
+    data.daily = { kills: 0, waves: 0 };
+    delete data.claimed["daily_kills"];
+    delete data.claimed["daily_waves"];
+  }
+  return data;
+}
+
+function saveQuestData(data) {
+  localStorage.setItem(QUEST_STORAGE, JSON.stringify(data));
+}
+
+// Diese Funktion zählt Fortschritt (wird im Spiel aufgerufen)
+function trackQuestProgress(type, amount = 1) {
+  const data = getQuestData();
+  if (type === "kill") {
+    data.stats.totalKills += amount;
+    data.daily.kills += amount;
+  } else if (type === "tower") {
+    data.stats.totalTowers += amount;
+  } else if (type === "wave") {
+    if (amount > data.stats.maxWave) data.stats.maxWave = amount;
+    data.daily.waves += 1;
+  }
+  saveQuestData(data);
+}
+
+// Liste aller Aufgaben & Belohnungen
+function getQuestList(data) {
+  return [
+    { id: "daily_kills", title: "📅 Tagesziel: 40 Gegner besiegen", cur: data.daily.kills, max: 40, reward: 2 },
+    { id: "daily_waves", title: "📅 Tagesziel: 5 Wellen schaffen", cur: data.daily.waves, max: 5, reward: 2 },
+    { id: "ach_tower10", title: "🏆 Baumeister: 15 Türme bauen", cur: data.stats.totalTowers, max: 15, reward: 3 },
+    { id: "ach_wave10",  title: "🏆 Überlebender: Welle 10 erreichen", cur: data.stats.maxWave, max: 10, reward: 4 },
+    { id: "ach_kill250", title: "🏆 Jäger: 250 Gegner besiegen", cur: data.stats.totalKills, max: 250, reward: 5 },
+    { id: "ach_wave20",  title: "🏆 Legende: Welle 20 erreichen", cur: data.stats.maxWave, max: 20, reward: 8 }
+  ];
+}
+
+// Diamanten einsammeln
+function claimQuest(id, reward) {
+  const data = getQuestData();
+  if (data.claimed[id]) return;
+
+  data.claimed[id] = true;
+  saveQuestData(data);
+
+  // Diamanten zu deiner Spiel-Variable hinzufügen
+  if (typeof gems !== "undefined") {
+    gems += reward;
+    const gemEl = document.getElementById("gems");
+    if (gemEl) gemEl.textContent = gems;
+    localStorage.setItem("neonTD_gems", gems); // Falls du Diamanten so speicherst
+  }
+  renderQuests();
+}
+
+function renderQuests() {
+  const listEl = document.getElementById("quest-list");
+  if (!listEl) return;
+  const data = getQuestData();
+  const quests = getQuestList(data);
+
+  listEl.innerHTML = quests.map(q => {
+    const done = q.cur >= q.max;
+    const isClaimed = !!data.claimed[q.id];
+    const progress = Math.min(q.cur, q.max);
+
+    let btnHtml = `<span style="opacity:0.6;font-size:12px;">${progress}/${q.max}</span>`;
+    if (isClaimed) {
+      btnHtml = `<span style="color:#4ade80;font-size:12px;">✅ Erhalten</span>`;
+    } else if (done) {
+      btnHtml = `<button class="upg" style="padding:4px 8px;background:#16a34a;" onclick="claimQuest('${q.id}', ${q.reward})">+${q.reward} 💎</button>`;
+    }
+
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px;background:#0f172a;border-radius:6px;border:1px solid #334155;">
+        <div style="text-align:left;font-size:13px;">
+          <div><b>${q.title}</b></div>
+          <div style="font-size:11px;opacity:0.75;">Fortschritt: ${progress} / ${q.max}</div>
+        </div>
+        <div>${btnHtml}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function toggleQuests() {
+  const overlay = document.getElementById("quest-overlay");
+  if (!overlay) return;
+  const isHidden = overlay.style.display === "none" || overlay.style.display === "";
+  overlay.style.display = isHidden ? "flex" : "none";
+  if (isHidden) renderQuests();
+}
+
+
 resetGame();
 loop();
                                           
