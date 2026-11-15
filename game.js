@@ -634,6 +634,35 @@ function toggleRank() {
   overlay.style.display = isHidden ? "flex" : "none";
   if (isHidden) renderLeaderboard();
 }
+// === VOLLBILD-MODUS ===
+function toggleFullscreen() {
+  const elem = document.documentElement;
+  const btn = document.getElementById("btn-fs");
+
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    // Vollbild aktivieren (inkl. Safari/iOS-Unterstützung)
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+    if (btn) btn.textContent = "✖";
+  } else {
+    // Vollbild beenden
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+    if (btn) btn.textContent = "⛶";
+  }
+}
+
+// Symbol automatisch zurücksetzen, falls der Nutzer mit "ESC" oder Wischen beendet
+document.addEventListener("fullscreenchange", () => {
+  const btn = document.getElementById("btn-fs");
+  if (btn) btn.textContent = document.fullscreenElement ? "✖" : "⛶";
+});
 
 resetGame();
 loop();
