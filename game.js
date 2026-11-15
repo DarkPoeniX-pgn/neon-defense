@@ -374,7 +374,8 @@ function updateUI() {
   document.getElementById('best').textContent = bestScores.at(currentMap);
   document.getElementById('btn-heal').disabled = gold < 120 || hp >= maxHp || gameOver || paused;
   document.getElementById('btn-nuke').disabled = gold < 90 || enemies.length === 0 || gameOver || paused;
-  new Array('laser', 'ice', 'sniper', 'rocket', 'mine', 'tesla', 'plasma').forEach(t => {
+  new Array('laser', 'ice', 'sniper', 'rocket', 'mine', 'tesla', 'plasma', 'cryo', 'orbital', 'void').forEach(t => {
+    
     const el = document.getElementById('t-' + t);
     if (el) el.style.opacity = gold < towerTypes[t].cost ? '0.4' : '1';
   });
