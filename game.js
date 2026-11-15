@@ -276,6 +276,8 @@ canvas.addEventListener('click', e => {
   const onPad = pads.some(p => p.c === c && p.r === r);
   gold -= spec.cost; playSfx('coin');
   towers.push({ c, r, x: c * TILE + TILE / 2, y: r * TILE + TILE / 2, type: buildType, lvl: 1, cd: 0, spent: spec.cost, boost: onPad ? 1.25 : 1 });
+  if (typeof trackQuestProgress === 'function') trackQuestProgress('tower', 1);
+  
   updateUI();
 });
 
