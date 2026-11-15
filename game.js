@@ -551,7 +551,8 @@ function draw() {
   enemies.forEach(drawEnemy);
   towers.forEach(t => {
     const spec = towerTypes[t.type], range = (spec.range + (t.lvl - 1) * 16) * t.boost;
-     if (selectedTower === t || showAllRanges) {
+     if ((typeof selected !== 'undefined' && selected === t) || showAllRanges) {
+       
        
     drawTower(t);
   });
@@ -564,7 +565,8 @@ function draw() {
 function loop() {
   for (let s = 0; s < gameSpeed; s++) step();
   draw(); updateUI(); requestAnimationFrame(loop);
-}// === LOKALE BESTENLISTE (OHNE EXTERNE SEITE) ===
+}
+// === LOKALE BESTENLISTE (OHNE EXTERNE SEITE) ===
 const STORAGE_KEY_SCORES = "neonTD_highscores";
 const STORAGE_KEY_NAME = "neonTD_playerName";
 
