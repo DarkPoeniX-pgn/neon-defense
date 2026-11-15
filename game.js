@@ -842,6 +842,39 @@ function pickBestTarget(t, inRangeEnemies) {
   }
   return inRangeEnemies[0]; // Standard: Erster in der Liste
 }
+// === ZIEL-PRIORITÄT & TUTORIAL-HINWEIS ===
+const TARGET_MODES = [
+  { id: "first", label: "🎯 Erster" },
+  { id: "strong", label: "🛡️ Stärkster" },
+  { id: "fast", label: "⚡ Schnellster" }
+];
+
+function cycleTargetMode() {
+  if (typeof selectedTower === "undefined" || !selectedTower) return;
+  const idx = TARGET_MODES.findIndex(m => m.id === (selectedTower.targetMode || "first"));
+  const next = TARGET_MODES[(idx + 1) % TARGET_MODES.length];
+  selectedTower.targetMode = next.id;
+  updateTargetButton();
+}
+
+function updateTargetButton() {
+  const btn = document.getElementById("btn-target");
+  if (!btn || typeof selectedTower === "undefined" || !selectedTower) return;
+  const mode = TARGET_MODES.find(m => m.id === (selectedTower.targetMode || "first")) || TARGET_MODES[0];
+  btn.textContent = mode.label;
+}
+
+function pickBestTarget(t, inRangeEnemies) {
+  if (!inRangeEnemies || inRangeEnemies.length === 0) return null;
+  const mode = t.targetMode || "first";
+  if (mode === "strong") {
+    return inRangeEnemies.reduce((a, b) => (b.hp > a.hp ? b : a));
+  }
+  if (mode === "fast") {
+    return inRangeEnemies.reduce((a, b) => ((b.speed || 0) > (a.speed || 0) ? b : a));
+  }
+  return inRangeEnemies[0];
+}
 
 
 
