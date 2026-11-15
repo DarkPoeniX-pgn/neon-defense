@@ -385,6 +385,8 @@ function updateUI() {
     
     const el = document.getElementById('t-' + t);
     if (el) el.style.opacity = gold < towerTypes[t].cost ? '0.4' : '1';
+    if (el && ['tesla', 'plasma', 'cryo', 'orbital', 'void'].includes(t)) el.style.display = unlocked[t] ? 'inline-block' : 'none';
+    
   });
   if (selectedTower) updateUpgradeBar();
 }
