@@ -438,7 +438,8 @@ function step() {
         playSfx('boom');
         enemies.forEach(e => {
           if (Math.hypot(e.x - b.target.x, e.y - b.target.y) <= b.splash) {
-            let dealt = b.dmg * (e.shield ? 0.15 : 1); e.hp -= dealt; addHitFx(e.x, e.y, dealt, b.color);
+            let dealt = b.dmg * (e.shield ? 0.15 : 1); e.hp -= dealt; addHitFx(e.x, e.y, dealt, b.color);if (b.owner) b.owner.totalDmg = (b.owner.totalDmg || 0) + Math.round(dealt);
+            
           }
         });
       } else {
