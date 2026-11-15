@@ -473,6 +473,8 @@ function step() {
     let e = enemies.at(i);
     if (e.hp <= 0) {
       gold += e.reward;
+      if (typeof trackQuestProgress === 'function') trackQuestProgress('kill', 1);
+      
       if (e.isBoss) { gems += 2; localStorage.setItem('tdGems', gems); addHitFx(e.x, e.y - 12, 2, '#38bdf8'); }
       enemies.splice(i, 1); playSfx('coin'); updateUI();
     }
