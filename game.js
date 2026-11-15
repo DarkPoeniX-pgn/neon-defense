@@ -444,7 +444,8 @@ function step() {
         });
       } else {
         let dealt = b.dmg * (b.pierce ? 1 : b.target.armor);
-        b.target.hp -= dealt; addHitFx(b.target.x, b.target.y, dealt, b.color);
+        b.target.hp -= dealt; addHitFx(b.target.x, b.target.y, dealt, b.color);if (b.owner) b.owner.totalDmg = (b.owner.totalDmg || 0) + Math.round(dealt);
+        
         if (b.slow > 0) { b.target.slowTimer = b.superFreeze ? 180 : 90; if (b.superFreeze) b.target.armor = Math.min(1, b.target.armor + 0.15); }
         if (b.chain) {
           let hits = 0, last = b.target;
