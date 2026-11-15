@@ -424,7 +424,7 @@ function step() {
     if (target) {
       t.cd = Math.max(8, spec.rate - (t.lvl - 1) * 3); playSfx('shoot');
       bullets.push({
-        x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow,owner: t, x: t.x, y: t.y, target, dmg, ...
+        x: t.x, y: t.y, target, dmg, color: spec.color, slow: spec.slow,owner: t, x: t.x, y: t.y, target, dmg, 
           
         splash: spec.splash * (t.type === 'rocket' && isMax ? 1.8 : 1),
         pierce: t.type === 'sniper' || t.type === 'plasma',
