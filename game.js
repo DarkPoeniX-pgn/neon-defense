@@ -293,7 +293,11 @@ function updateUpgradeBar() {
   document.getElementById('sel-info').textContent = `${padTxt}${spec.name} St.${selectedTower.lvl}${extra}`;
   document.getElementById('btn-upg').textContent = selectedTower.lvl >= 6 ? '⭐ MAX' : `⬆️ +1 (${upgCost}💰)`;
   document.getElementById('btn-upg').disabled = selectedTower.lvl >= 6 || gold < upgCost;
+  document.getElementById('sel-info').textContent += ' | 💥 ' + (selectedTower.totalDmg || 0);
+if (typeof updateTargetButton === 'function') updateTargetButton();
+  
 }
+
 
 function upgradeTower() {
   if (!selectedTower || selectedTower.lvl >= 6) return;
