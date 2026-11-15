@@ -89,14 +89,21 @@ function toggleShop() {
 
 function updateShopUI() {
   document.getElementById('shop-gems').textContent = gems;
-  const bt = document.getElementById('buy-tesla'), bp = document.getElementById('buy-plasma');
-  bt.textContent = unlocked.tesla ? '✅ Tesla-Turm freigeschaltet!' : '⚡ Tesla-Turm (Kettenblitz, 130💰) – 8 💎';
-  bt.disabled = unlocked.tesla || gems < 8;
-  bp.textContent = unlocked.plasma ? '✅ Plasma-Werfer freigeschaltet!' : '☢️ Plasma-Werfer (Extrem-DPS, 180💰) – 14 💎';
-  bp.disabled = unlocked.plasma || gems < 14;
-  document.getElementById('t-tesla').style.display = unlocked.tesla ? 'block' : 'none';
-  document.getElementById('t-plasma').style.display = unlocked.plasma ? 'block' : 'none';
+  const shopItems = [
+    { id: 'tesla', cost: 12, label: '🔵 [Selten] ⚡ Tesla-Turm (Kettenblitz, 130💰) – 12 💎', short: '🔵 ⚡ Tesla-Turm' },
+    { id: 'cryo', cost: 20, label: '🟣 [Episch] 🌪️ Kryo-Sturm (Flächen-Eis, 160💰) – 20 💎', short: '🟣 🌪️ Kryo-Sturm' },
+    { id: 'plasma', cost: 25, label: '🟣 [Episch] ☢️ Plasma-Werfer (Extrem-DPS, 180💰) – 25 💎', short: '🟣 ☢️ Plasma-Werfer' },
+    { id: 'orbital', cost: 35, label: '🔴 [Mythisch] ☄️ Orbital-Laser (Mega-Reichweite, 240💰) – 35 💎', short: '🔴 ☄️ Orbital-Laser' },
+    { id: 'void', cost: 55, label: '🟡 [Legendär] 🌌 Schwarzes Loch (Super-Nova, 320💰) – 55 💎', short: '🟡 🌌 Schwarzes Loch' }
+  ];
+  shopItems.forEach(item => {
+    const btn = document.getElementById('buy-' + item.id);
+    if (!btn) return;
+    btn.textContent = unlocked[item.id] ? `✅ ${item.short} (Freigeschaltet)` : item.label;
+    btn.disabled = unlocked[item.id] || gems < item.cost;
+  });
 }
+
 
 function unlockTower(type, cost) {
   if (unlocked[type] || gems < cost) return;
