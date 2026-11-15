@@ -62,15 +62,19 @@
       <p>Du hast <b>Welle <span id="end-wave">0</span></b> erreicht!</p>
       <button class="wave-btn" style="padding:12px 24px;font-size:16px;" onclick="resetGame()">🔄 Nochmal spielen</button>
     </div>
-
     <div id="shop-overlay" style="display:none;">
       <h3>🛒 Diamanten-Turm-Shop (<span id="shop-gems">0</span> 💎)</h3>
-      <div class="help-list" style="display:flex;flex-direction:column;gap:8px;">
-        <button class="upg" id="buy-tesla" onclick="unlockTower('tesla', 8)">⚡ Tesla-Turm (Kettenblitz, 130💰) – 8 💎</button>
-        <button class="upg" id="buy-plasma" onclick="unlockTower('plasma', 14)">☢️ Plasma-Werfer (Extrem-DPS, 180💰) – 14 💎</button>
+      <div class="help-list" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;">
+        <button class="upg" id="buy-tesla" style="border-left:4px solid #38bdf8;" onclick="unlockTower('tesla', 12)">🔵 [Selten] ⚡ Tesla-Turm (Kettenblitz, 130💰) – 12 💎</button>
+        <button class="upg" id="buy-cryo" style="border-left:4px solid #a855f7;" onclick="unlockTower('cryo', 20)">🟣 [Episch] 🌪️ Kryo-Sturm (Flächen-Eis, 160💰) – 20 💎</button>
+        <button class="upg" id="buy-plasma" style="border-left:4px solid #a855f7;" onclick="unlockTower('plasma', 25)">🟣 [Episch] ☢️ Plasma-Werfer (Extrem-DPS, 180💰) – 25 💎</button>
+        <button class="upg" id="buy-orbital" style="border-left:4px solid #ef4444;" onclick="unlockTower('orbital', 35)">🔴 [Mythisch] ☄️ Orbital-Laser (Mega-Reichweite, 240💰) – 35 💎</button>
+        <button class="upg" id="buy-void" style="border-left:4px solid #facc15;" onclick="unlockTower('void', 55)">🟡 [Legendär] 🌌 Schwarzes Loch (Super-Nova, 320💰) – 55 💎</button>
       </div>
-      <button class="wave-btn" style="padding:8px 20px;margin-top:12px;" onclick="toggleShop()">Schließen</button>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:10px;" onclick="toggleShop()">Schließen</button>
     </div>
+    
+    
 
     <div id="lab-overlay" style="display:none;">
       <h3>💎 Tech-Labor (<span id="lab-gems">0</span> 💎)</h3>
