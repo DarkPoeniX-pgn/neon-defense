@@ -437,7 +437,8 @@ function step() {
               
           
         splash: spec.splash * (t.type === 'rocket' && isMax ? 1.8 : 1),
-        pierce: t.type === 'sniper' || t.type === 'plasma',
+        pierce: t.type === 'sniper' || t.type === 'plasma' || t.type === 'orbital',
+              
         chain: (t.type === 'laser' && isMax) || t.type === 'tesla',
         chainCount: t.type === 'tesla' ? (isMax ? 4 : 2) : 1,
         superFreeze: t.type === 'ice' && isMax
