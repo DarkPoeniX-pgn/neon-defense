@@ -766,7 +766,7 @@ function claimQuest(id, reward) {
     gems += reward;
     const gemEl = document.getElementById("gems");
     if (gemEl) gemEl.textContent = gems;
-    localStorage.setItem("neonTD_gems", gems); // Falls du Diamanten so speicherst
+    localStorage.setItem("tdGemes", gems); // Falls du Diamanten so speicherst
   }
   renderQuests();
 }
