@@ -788,6 +788,51 @@ function toggleQuests() {
   overlay.style.display = isHidden ? "flex" : "none";
   if (isHidden) renderQuests();
 }
+// === ZIEL-PRIORITÄT & TUTORIAL-HINWEIS ===
+const TARGET_MODES = [
+  { id: "first", label: "🎯 Erster" },
+  { id: "strong", label: "🛡️ Stärkster" },
+  { id: "fast", label: "⚡ Schnellster" }
+];
+
+// Hilfsfunktion, um den aktuell ausgewählten Turm zu finden
+function getSelectedTowerObj() {
+  if (typeof sel !== "undefined" && sel) return sel;
+  if (typeof selectedTower !== "undefined" && selectedTower) return selectedTower;
+  return null;
+}
+
+// Ziel-Priorität beim Antippen von #btn-target umschalten
+function cycleTargetMode() {
+  const t = getSelectedTowerObj();
+  if (!t) return;
+  const idx = TARGET_MODES.findIndex(m => m.id === (t.targetMode || "first"));
+  const next = TARGET_MODES[(idx + 1) % TARGET_MODES.length];
+  t.targetMode = next.id;
+  updateTargetButton();
+}
+
+function updateTargetButton() {
+  const btn = document.getElementById("btn-target");
+  const t = getSelectedTowerObj();
+  if (!btn || !t) return;
+  const mode = TARGET_MODES.find(m => m.id === (t.targetMode || "first")) || TARGET_MODES[0];
+  btn.textContent = mode.label;
+}
+
+// Wählt das passende Ziel je nach eingestellter Priorität aus
+function pickBestTarget(t, inRangeEnemies) {
+  if (!inRangeEnemies || inRangeEnemies.length === 0) return null;
+  const mode = t.targetMode || "first";
+  if (mode === "strong") {
+    return inRangeEnemies.reduce((a, b) => (b.hp > a.hp ? b : a));
+  }
+  if (mode === "fast") {
+    return inRangeEnemies.reduce((a, b) => ((b.spd || 0) > (a.spd || 0) ? b : a));
+  }
+  return inRangeEnemies[0]; // Standard: Erster in der Liste
+}
+
 
 
 resetGame();
