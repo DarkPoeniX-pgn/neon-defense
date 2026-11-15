@@ -551,9 +551,8 @@ function draw() {
   enemies.forEach(drawEnemy);
   towers.forEach(t => {
     const spec = towerTypes[t.type], range = (spec.range + (t.lvl - 1) * 16) * t.boost;
-     if ((typeof selected !== 'undefined' && selected === t) || showAllRanges) {
-       if (typeof showAllRanges !== 'undefined' && showAllRanges) { ctx.beginPath(); ctx.arc(t.x, t.y, range, 0, Math.PI * 2); ctx.fillStyle = 'rgba(56, 189, 248, 0.12)'; ctx.fill(); ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)'; ctx.stroke(); }
-       
+     if (showAllRanges || (typeof sel !== 'undefined' && sel === t)) { ctx.beginPath(); ctx.arc(t.x, t.y, range, 0, Math.PI * 2); ctx.fillStyle = 'rgba(56, 189, 248, 0.14)'; ctx.fill(); ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)'; ctx.stroke(); }
+    
        
     drawTower(t);
   });
