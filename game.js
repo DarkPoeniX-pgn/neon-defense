@@ -383,6 +383,8 @@ function step() {
     if (--spawnTimer <= 0) { enemies.push(spawnQueue.shift()); spawnTimer = Math.max(18, 42 - wave * 2); }
   } else if (enemies.length === 0 && waveRunning) {
     waveRunning = false; autoCd = 90;
+    if (typeof trackQuestProgress === 'function') trackQuestProgress('wave', wave);
+    
     document.getElementById('btn-wave').disabled = false;
     let mined = 0;
     towers.forEach(t => { if (t.type === 'mine') mined += (t.lvl >= 6 ? 300 : 35 * t.lvl); });
