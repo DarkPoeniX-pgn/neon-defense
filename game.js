@@ -514,6 +514,10 @@ function drawTower(t) {
     else if (t.type === 'rocket') { ctx.fillRect(-7, -10, 18, 7); ctx.fillRect(-7, 3, 18, 7); ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.moveTo(15, -6.5); ctx.lineTo(10, -10); ctx.lineTo(10, -3); ctx.fill(); ctx.beginPath(); ctx.moveTo(15, 6.5); ctx.lineTo(10, 3); ctx.lineTo(10, 10); ctx.fill(); }
     else if (t.type === 'tesla') { ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.stroke(); }
     else if (t.type === 'plasma') { ctx.fillRect(-4, -7, 22, 14); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(6, 0, 5, 0, Math.PI * 2); ctx.fill(); }
+        else if (t.type === 'cryo') { ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.stroke(); ctx.fillRect(-3, -14, 6, 28); ctx.fillRect(-14, -3, 28, 6); }
+    else if (t.type === 'orbital') { ctx.fillRect(-5, -8, 24, 5); ctx.fillRect(-5, 3, 24, 5); ctx.fillStyle = '#fca5a5'; ctx.fillRect(2, -2, 22, 4); }
+    else if (t.type === 'void') { ctx.fillStyle = '#090d16'; ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.stroke(); }
+    
     ctx.restore();
   }
   ctx.fillStyle = t.lvl >= 6 ? '#facc15' : '#090d16'; ctx.beginPath(); ctx.arc(t.x + 11, t.y + 11, 6.5, 0, Math.PI * 2); ctx.fill();
