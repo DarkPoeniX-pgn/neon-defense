@@ -415,7 +415,8 @@ function step() {
     const isMax = t.lvl >= 6;
     const dmg = spec.dmg * (1 + (t.lvl - 1) * 0.55) * t.boost * dmgTech * (t.type === 'sniper' && isMax ? 1.5 : 1);
     if (t.cd > 0) { t.cd--; return; }
-    const target = enemies.find(e => Math.hypot(e.x - t.x, e.y - t.y) <= range);
+    const target = pickBestTarget(t, enemies.filter(e => Math.hypot(e.x - t.x, e.y - t.y) <= range));
+    
     if (target) {
       t.cd = Math.max(8, spec.rate - (t.lvl - 1) * 3); playSfx('shoot');
       bullets.push({
