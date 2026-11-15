@@ -527,6 +527,8 @@ function drawEnemy(e) {
 
 function draw() {
   if (!paused) gfxTick++;
+  const hint = document.getElementById("tutorial-hint"); if (hint) hint.style.display = (wave === 0 && towers.length === 0 && !editMode) ? "block" : "none";
+  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   bgStars.forEach(s => { ctx.fillStyle = `rgba(148, 163, 184, ${0.25 + Math.sin(gfxTick * 0.03 + s.a * 6) * 0.2})`; ctx.fillRect(s.x, s.y, s.r, s.r); });
   const pts = editMode ? editPts : waypoints;
