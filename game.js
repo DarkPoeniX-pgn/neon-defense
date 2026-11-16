@@ -726,19 +726,23 @@ function getQuestData() {
   const today = new Date().toLocaleDateString("de-DE");
   let data = JSON.parse(localStorage.getItem(QUEST_STORAGE));
 
-  // Initialisieren oder tägliche Aufgaben am neuen Tag zurücksetzen
   if (!data) {
     data = {
       lastDay: today,
       stats: { totalKills: 0, totalTowers: 0, maxWave: 0 },
-      daily: { kills: 0, waves: 0 },
+      daily: { kills: 0, waves: 0, towers: 0 },
       claimed: {}
     };
-  } else if (data.lastDay !== today) {
-    data.lastDay = today;
-    data.daily = { kills: 0, waves: 0 };
-    delete data.claimed["daily_kills"];
-    delete data.claimed["daily_waves"];
+  } else {
+    if (!data.daily) data.daily = { kills: 0, waves: 0, towers: 0 };
+    if (data.lastDay !== today) {
+      data.lastDay = today;
+      data.daily = { kills: 0, waves: 0, towers: 0 };
+      delete data.claimed["daily_kills"];
+      delete data.claimed["daily_waves"];
+      delete data.claimed["daily_towers"];
+      delete data.claimed["daily_kills_hard"];
+    }
   }
   return data;
 }
@@ -747,7 +751,6 @@ function saveQuestData(data) {
   localStorage.setItem(QUEST_STORAGE, JSON.stringify(data));
 }
 
-// Diese Funktion zählt Fortschritt (wird im Spiel aufgerufen)
 function trackQuestProgress(type, amount = 1) {
   const data = getQuestData();
   if (type === "kill") {
@@ -755,12 +758,38 @@ function trackQuestProgress(type, amount = 1) {
     data.daily.kills += amount;
   } else if (type === "tower") {
     data.stats.totalTowers += amount;
+    data.daily.towers = (data.daily.towers || 0) + amount;
   } else if (type === "wave") {
     if (amount > data.stats.maxWave) data.stats.maxWave = amount;
     data.daily.waves += 1;
   }
   saveQuestData(data);
 }
+
+function getQuestList(data) {
+  return [
+    // === 4 TÄGLICHE AUFGABEN (setzen sich jeden Tag neu zurück) ===
+    { id: "daily_towers",     title: "📅 Tagesziel: 8 Türme errichten",           cur: data.daily.towers || 0, max: 8,    reward: 2 },
+    { id: "daily_kills",      title: "📅 Tagesziel: 50 Gegner besiegen",          cur: data.daily.kills,       max: 50,   reward: 3 },
+    { id: "daily_waves",      title: "📅 Tagesziel: 8 Wellen schaffen",           cur: data.daily.waves,       max: 8,    reward: 4 },
+    { id: "daily_kills_hard", title: "📅 Tages-Profi: 180 Gegner an einem Tag",   cur: data.daily.kills,       max: 180,  reward: 6 },
+
+    // === LANGZEIT-ERFOLGE (für echte Ausdauer & hohe Belohnungen) ===
+    { id: "ach_tower15",      title: "🏆 Architekt I: 15 Türme bauen",            cur: data.stats.totalTowers, max: 15,   reward: 4 },
+    { id: "ach_tower100",     title: "🏆 Architekt II: 100 Türme bauen",          cur: data.stats.totalTowers, max: 100,  reward: 10 },
+    { id: "ach_tower350",     title: "🏆 Festungs-Meister: 350 Türme bauen",      cur: data.stats.totalTowers, max: 350,  reward: 20 },
+
+    { id: "ach_kill250",      title: "🏆 Kammerjäger I: 250 Gegner besiegen",     cur: data.stats.totalKills,  max: 250,  reward: 5 },
+    { id: "ach_kill1500",     title: "🏆 Kammerjäger II: 1.500 Gegner besiegen",  cur: data.stats.totalKills,  max: 1500, reward: 15 },
+    { id: "ach_kill5000",     title: "🏆 Neon-Vernichter: 5.000 Gegner besiegen", cur: data.stats.totalKills,  max: 5000, reward: 30 },
+
+    { id: "ach_wave10",       title: "🏆 Überlebender: Welle 10 erreichen",       cur: data.stats.maxWave,     max: 10,   reward: 5 },
+    { id: "ach_wave20",       title: "🏆 Veteran: Welle 20 erreichen",            cur: data.stats.maxWave,     max: 20,   reward: 12 },
+    { id: "ach_wave35",       title: "🏆 Großmeister: Welle 35 erreichen",        cur: data.stats.maxWave,     max: 35,   reward: 22 },
+    { id: "ach_wave50",       title: "🏆 Unsterblich: Welle 50 erreichen",        cur: data.stats.maxWave,     max: 50,   reward: 40 }
+  ];
+}
+
 
 // Liste aller Aufgaben & Belohnungen
 function getQuestList(data) {
