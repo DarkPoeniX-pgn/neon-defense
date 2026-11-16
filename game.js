@@ -791,17 +791,7 @@ function getQuestList(data) {
 }
 
 
-// Liste aller Aufgaben & Belohnungen
-function getQuestList(data) {
-  return [
-    { id: "daily_kills", title: "📅 Tagesziel: 40 Gegner besiegen", cur: data.daily.kills, max: 40, reward: 2 },
-    { id: "daily_waves", title: "📅 Tagesziel: 5 Wellen schaffen", cur: data.daily.waves, max: 5, reward: 2 },
-    { id: "ach_tower10", title: "🏆 Baumeister: 15 Türme bauen", cur: data.stats.totalTowers, max: 15, reward: 3 },
-    { id: "ach_wave10",  title: "🏆 Überlebender: Welle 10 erreichen", cur: data.stats.maxWave, max: 10, reward: 4 },
-    { id: "ach_kill250", title: "🏆 Jäger: 250 Gegner besiegen", cur: data.stats.totalKills, max: 250, reward: 5 },
-    { id: "ach_wave20",  title: "🏆 Legende: Welle 20 erreichen", cur: data.stats.maxWave, max: 20, reward: 8 }
-  ];
-}
+
 
 // Diamanten einsammeln
 function claimQuest(id, reward) {
