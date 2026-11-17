@@ -482,6 +482,17 @@ function step() {
   } else if (enemies.length === 0 && waveRunning) {
     waveRunning = false; autoCd = 90;
     if (typeof trackQuestProgress === 'function') trackQuestProgress('wave', wave);
+        const diffKey = String(diffMult);
+    if (wave > (diffBest[diffKey] || 0)) {
+      diffBest[diffKey] = wave;
+      localStorage.setItem('tdDiffBest', JSON.stringify(diffBest));
+      updateDiffLocks();
+    }
+    if (wave === 20 && currentMap < 5) {
+      effects.push({ x: 240, y: 180, txt: `🎉 K${currentMap + 2} FREIGESCHALTET!`, color: '#4ade80', life: 95, vy: -0.4 });
+      playSfx('coin');
+    }
+    
     
     document.getElementById('btn-wave').disabled = false;
     let mined = 0;
