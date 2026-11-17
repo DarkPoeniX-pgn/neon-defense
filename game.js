@@ -233,17 +233,18 @@ function updateDiffLocks() {
   const normalUnlocked = (diffBest['0.75'] || 0) >= 20;
   const extremUnlocked = (diffBest['1'] || 0) >= 20;
 
-  sel.options[0].text = '🟢 Leicht';
-  sel.options[1].disabled = !normalUnlocked;
-  sel.options[1].text = normalUnlocked ? '🟡 Normal' : '🔒 Normal (Leicht W20)';
-  sel.options[2].disabled = !extremUnlocked;
-  sel.options[2].text = extremUnlocked ? '🔴 Extrem' : '🔒 Extrem (Normal W20)';
+  sel.options.item(0).text = '🟢 Leicht';
+  sel.options.item(1).disabled = !normalUnlocked;
+  sel.options.item(1).text = normalUnlocked ? '🟡 Normal' : '🔒 Normal (Leicht W20)';
+  sel.options.item(2).disabled = !extremUnlocked;
+  sel.options.item(2).text = extremUnlocked ? '🔴 Extrem' : '🔒 Extrem (Normal W20)';
 
   if ((diffMult === 1 && !normalUnlocked) || (diffMult === 1.35 && !extremUnlocked)) {
     diffMult = 0.75;
     sel.value = '0.75';
   }
 }
+
 
 function toggleEditor() {
   if (!editMode) {
