@@ -19,18 +19,15 @@
   <div id="ui-mid">
     <span id="wave-preview">🔮 Nächste: Späher</span>
     <div style="display:flex;gap:4px;">
-      <select id="map-sel" onchange="changeMap()">
-        <option value="0">🗺️ K1</option>
-        <option value="1">🌀 K2</option>
-        <option value="2">⚡ K3</option>
-        <option value="3">🛠️ Eigene</option>
-      </select>
+        <div style="display:flex;gap:4px;">
+      <button class="spd-btn" id="btn-road" onclick="toggleRoad()">🗺️ K1</button>
       <select id="diff-sel" onchange="changeDiff()">
-        <option value="0.75">🟢 Leicht</option>
-        <option value="1" selected>🟡 Normal</option>
-        <option value="1.35">🔴 Extrem</option>
+        <option value="0.75" selected>🟢 Leicht</option>
+        <option value="1" disabled>🔒 Normal (W20)</option>
+        <option value="1.35" disabled>🔒 Extrem (W20)</option>
       </select>
-    </div>
+        </div>
+      
   </div>
 
   <div id="ui-sub">
