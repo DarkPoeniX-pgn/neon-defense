@@ -100,6 +100,12 @@
       <div id="quest-list" class="help-list" style="max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
       <button class="wave-btn" style="padding:8px 20px;margin-top:10px;" onclick="toggleQuests()">Schließen</button>
         </div>
+        <div id="road-overlay" style="display:none;position:absolute;inset:12px;background:rgba(15,23,42,0.97);border:2px solid #38bdf8;border-radius:12px;flex-direction:column;align-items:center;justify-content:center;padding:14px;z-index:45;">
+      <h3>🗺️ Kampagnen-Straße</h3>
+      <p style="font-size:11px;color:#94a3b8;margin:0 0 8px 0;">Schaffe <b>Welle 20</b> auf einer Karte, um die nächste freizuschalten!</p>
+      <div id="road-list" class="help-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;width:100%;"></div>
+      <button class="wave-btn" style="padding:8px 20px;margin-top:10px;" onclick="toggleRoad()">Schließen</button>
+        </div>
     
 
     <div id="help-overlay" style="display:none;" onclick="toggleHelp()">
