@@ -46,6 +46,7 @@ const towerTypes = {
 
 let currentMap = 0, diffMult = 0.75, waypoints = maps.at(0), hp = 20, maxHp = 20, gold = 175, wave = 0;
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) ||;
+
 while (bestScores.length < 7) bestScores.push(0);
 let diffBest = JSON.parse(localStorage.getItem('tdDiffBest')) || { '0.75': 0, '1': 0, '1.35': 0 };
 
