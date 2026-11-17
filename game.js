@@ -5,27 +5,50 @@ canvas.width = COLS * TILE; canvas.height = ROWS * TILE;
 
 let customMap = JSON.parse(localStorage.getItem('tdCustomMap')) || new Array({c:0,r:2},{c:11,r:2},{c:11,r:7},{c:0,r:7});
 const maps = new Array(
+  // K1: Neon-Pfad (Start)
   new Array({c:0,r:1},{c:9,r:1},{c:9,r:4},{c:2,r:4},{c:2,r:7},{c:10,r:7},{c:10,r:9}),
+  // K2: Doppel-Schleife (ab K1 Welle 20)
   new Array({c:0,r:1},{c:10,r:1},{c:10,r:8},{c:1,r:8},{c:1,r:3},{c:8,r:3},{c:8,r:6},{c:4,r:6},{c:4,r:5}),
+  // K3: Blitz-Zickzack (ab K2 Welle 20)
   new Array({c:1,r:0},{c:1,r:8},{c:4,r:8},{c:4,r:1},{c:7,r:1},{c:7,r:8},{c:10,r:8},{c:10,r:1}),
+  // K4: Kreuz-Labyrinth (ab K3 Welle 20)
+  new Array({c:0,r:4},{c:5,r:4},{c:5,r:1},{c:9,r:1},{c:9,r:8},{c:3,r:8},{c:3,r:6},{c:11,r:6}),
+  // K5: Doppel-Schlange (ab K4 Welle 20)
+  new Array({c:0,r:1},{c:11,r:1},{c:11,r:3},{c:1,r:3},{c:1,r:5},{c:11,r:5},{c:11,r:7},{c:1,r:7},{c:1,r:9},{c:11,r:9}),
+  // K6: Neon-Zitadelle (ab K5 Welle 20)
+  new Array({c:0,r:0},{c:11,r:0},{c:11,r:9},{c:0,r:9},{c:0,r:2},{c:9,r:2},{c:9,r:7},{c:2,r:7},{c:2,r:4},{c:7,r:4}),
+  // Index 6: Eigene Map
   customMap
 );
 
+const mapMeta = [
+  { name: '🗺️ K1: Neon-Pfad' },
+  { name: '🌀 K2: Doppel-Schleife' },
+  { name: '⚡ K3: Blitz-Zickzack' },
+  { name: '💠 K4: Kreuz-Labyrinth' },
+  { name: '🐍 K5: Doppel-Schlange' },
+  { name: '👑 K6: Neon-Zitadelle' },
+  { name: '🛠️ Eigene Map' }
+];
+
 const towerTypes = {
-  laser:  { name: '⚪Laser',  cost: 50,  range: 115, dmg: 18,  rate: 25, color: '#38bdf8', slow: 0,   splash: 0 },
-  ice:    { name: '⚪Eis',    cost: 75,  range: 105, dmg: 8,   rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
-  sniper: { name: '🔵Sniper', cost: 95,  range: 215, dmg: 75,  rate: 85, color: '#4ade80', slow: 0,   splash: 0 },
-  rocket: { name: '🔵Rakete', cost: 110, range: 135, dmg: 45,  rate: 65, color: '#f43f5e', slow: 0,   splash: 55 },
-  mine:   { name: '🔵Bank',   cost: 100, range: 0,   dmg: 0,   rate: 0,  color: '#facc15', slow: 0,   splash: 0 },
-  tesla:  { name: '🟣Tesla',  cost: 130, range: 130, dmg: 32,  rate: 32, color: '#c084fc', slow: 0,   splash: 0 },
-  plasma: { name: '🟣Plasma', cost: 180, range: 150, dmg: 110, rate: 28, color: '#fb923c', slow: 0,   splash: 0 },
-    cryo: { name: '🟣 Kryo-Sturm', cost: 160, range: 115, rate: 48, dmg: 18, color: '#a855f7', slow: 1, splash: 65 },
-  orbital: { name: '🔴 Orbital-Laser', cost: 240, range: 210, rate: 16, dmg: 42, color: '#ef4444', slow: 0, splash: 0 },
-  void: { name: '🟡 Schwarzes Loch', cost: 320, range: 135, rate: 55, dmg: 135, color: '#facc15', slow: 1, splash: 85 },
-    
+  laser:   { name: '⚪Laser',          cost: 50,  range: 115, dmg: 18,  rate: 25, color: '#38bdf8', slow: 0,   splash: 0 },
+  ice:     { name: '⚪Eis',            cost: 75,  range: 105, dmg: 8,   rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
+  sniper:  { name: '🔵Sniper',         cost: 95,  range: 215, dmg: 75,  rate: 85, color: '#4ade80', slow: 0,   splash: 0 },
+  rocket:  { name: '🔵Rakete',         cost: 110, range: 135, dmg: 45,  rate: 65, color: '#f43f5e', slow: 0,   splash: 55 },
+  mine:    { name: '🔵Bank',           cost: 100, range: 0,   dmg: 0,   rate: 0,  color: '#facc15', slow: 0,   splash: 0 },
+  tesla:   { name: '🟣Tesla',          cost: 130, range: 130, dmg: 32,  rate: 32, color: '#c084fc', slow: 0,   splash: 0 },
+  plasma:  { name: '🟣Plasma',         cost: 180, range: 150, dmg: 110, rate: 28, color: '#fb923c', slow: 0,   splash: 0 },
+  cryo:    { name: '🟣 Kryo-Sturm',    cost: 160, range: 115, dmg: 18,  rate: 48, color: '#a855f7', slow: 1,   splash: 65 },
+  orbital: { name: '🔴 Orbital-Laser', cost: 240, range: 210, dmg: 42,  rate: 16, color: '#ef4444', slow: 0,   splash: 0 },
+  void:    { name: '🟡 Schwarzes Loch',cost: 320, range: 135, dmg: 135, rate: 55, color: '#facc15', slow: 1,   splash: 85 }
 };
 
-let currentMap = 0, diffMult = 1, waypoints = maps.at(0), hp = 20, maxHp = 20, gold = 175, wave = 0;
+let currentMap = 0, diffMult = 0.75, waypoints = maps.at(0), hp = 20, maxHp = 20, gold = 175, wave = 0;
+let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) ||;
+while (bestScores.length < 7) bestScores.push(0);
+let diffBest = JSON.parse(localStorage.getItem('tdDiffBest')) || { '0.75': 0, '1': 0, '1.35': 0 };
+
 let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0, 0);
 let gems = Number(localStorage.getItem('tdGems')) || 0;
 let tech = JSON.parse(localStorage.getItem('tdTech')) || { gold: 0, hp: 0, dmg: 0, disc: 0 };
