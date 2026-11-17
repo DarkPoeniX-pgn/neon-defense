@@ -168,49 +168,108 @@ function buyTech(k) {
   playSfx('coin'); updateLabUI();
   if (wave === 0) resetGame(); else updateUI();
 }
+function closeOverlays(except) {
+  new Array('lab-overlay', 'shop-overlay', 'rank-overlay', 'help-overlay', 'road-overlay').forEach(id => {
+    const el = document.getElementById(id);
+    if (el && id !== except) el.style.display = 'none';
+  });
+}
 
-function toggleRank() {
-  closeOverlays('rank-overlay');
-  const r = document.getElementById('rank-overlay');
+function toggleRoad() {
+  closeOverlays('road-overlay');
+  const r = document.getElementById('road-overlay');
   const open = r.style.display === 'none';
   r.style.display = open ? 'flex' : 'none';
   paused = open;
-  if (open) { document.getElementById('player-name').value = playerName; renderRank(); }
+  if (open) renderRoad();
 }
 
-function saveName() {
-  const val = document.getElementById('player-name').value.trim();
-  if (val) { playerName = val; localStorage.setItem('tdName', playerName); playSfx('coin'); renderRank(); }
+function renderRoad() {
+  const list = document.getElementById('road-list');
+  if (!list) return;
+  list.innerHTML = mapMeta.map((m, idx) => {
+    const isCustom = idx === 6;
+    const isUnlocked = idx === 0 || isCustom || bestScores[idx - 1] >= 20;
+    const cleared = !isCustom && bestScores[idx] >= 20;
+    const isCurrent = currentMap === idx;
+    const connector = idx < mapMeta.length - 1
+      ? `<div style="width:4px;height:14px;background:${cleared ? '#4ade80' : '#334155'};margin:2px 0;border-radius:2px;"></div>`
+      : '';
+
+    const statusTxt = isCustom
+      ? 'Frei baubar'
+      : !isUnlocked
+        ? `🔒 Schaffe Welle 20 auf K${idx}`
+        : cleared
+          ? `✅ Geschafft (Rekord: W${bestScores[idx]})`
+          : `🎯 Ziel: Welle 20 (Rekord: W${bestScores[idx]})`;
+
+    return `
+      <button class="upg" onclick="selectRoadMap(${idx})" ${!isUnlocked ? 'disabled' : ''}
+        style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:8px 10px;
+        border:${isCurrent ? '2px solid #38bdf8' : '1px solid #334155'};
+        background:${isCurrent ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.85)'};
+        opacity:${isUnlocked ? '1' : '0.55'};">
+        <span style="font-weight:bold;">${isUnlocked ? '' : '🔒 '}${m.name}</span>
+        <span style="font-size:11px;color:${cleared ? '#4ade80' : '#cbd5e1'};">${statusTxt}</span>
+      </button>${connector}`;
+  }).join('');
 }
 
-function renderRank() {
-  const myBest = Math.max(...bestScores);
-  const entries = new Array(
-    { name: 'CyberKing', w: 38 }, { name: 'Valkyrie99', w: 31 }, { name: 'NovaStriker', w: 25 },
-    { name: 'ShadowBot', w: 19 }, { name: 'RookieOne', w: 12 }, { name: playerName + ' (Du)', w: myBest, me: true }
-  ).sort((a, b) => b.w - a.w);
-  document.getElementById('rank-list').innerHTML = entries.map((e, i) =>
-    `<div style="padding:4px 6px;border-radius:6px;margin-bottom:3px;background:${e.me ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)'};display:flex;justify-content:space-between;"><span>#${i + 1} <b>${e.name}</b></span><span>🌊 Welle ${e.w}</span></div>`
-  ).join('');
+function selectRoadMap(idx) {
+  if (idx > 0 && idx < 6 && bestScores[idx - 1] < 20) return;
+  currentMap = idx;
+  waypoints = maps.at(currentMap);
+  const btn = document.getElementById('btn-road');
+  if (btn) btn.textContent = idx === 6 ? '🛠️ Eigene' : `🗺️ K${idx + 1}`;
+  toggleRoad();
+  resetGame();
 }
+
+function updateDiffLocks() {
+  const sel = document.getElementById('diff-sel');
+  if (!sel) return;
+  const normalUnlocked = (diffBest['0.75'] || 0) >= 20;
+  const extremUnlocked = (diffBest['1'] || 0) >= 20;
+
+  sel.options[0].text = '🟢 Leicht';
+  sel.options[1].disabled = !normalUnlocked;
+  sel.options[1].text = normalUnlocked ? '🟡 Normal' : '🔒 Normal (Leicht W20)';
+  sel.options[2].disabled = !extremUnlocked;
+  sel.options[2].text = extremUnlocked ? '🔴 Extrem' : '🔒 Extrem (Normal W20)';
+
+  if ((diffMult === 1 && !normalUnlocked) || (diffMult === 1.35 && !extremUnlocked)) {
+    diffMult = 0.75;
+    sel.value = '0.75';
+  }
+}
+
 function toggleEditor() {
   if (!editMode) {
     editMode = true; editPts = new Array();
-    document.getElementById('map-sel').value = '3'; currentMap = 3;
+    currentMap = 6;
+    const btn = document.getElementById('btn-road');
+    if (btn) btn.textContent = '🛠️ Eigene';
     document.getElementById('btn-edit').textContent = '💾 Fertig';
     document.getElementById('btn-edit').classList.add('fast');
     alert('Tippe nacheinander auf Start- & Eckpunkte. Danach auf "💾 Fertig" tippen!');
   } else {
-    if (editPts.length >= 2) { customMap = editPts; maps.splice(3, 1, customMap); localStorage.setItem('tdCustomMap', JSON.stringify(customMap)); }
+    if (editPts.length >= 2) { customMap = editPts; maps.splice(6, 1, customMap); localStorage.setItem('tdCustomMap', JSON.stringify(customMap)); }
     editMode = false;
     document.getElementById('btn-edit').textContent = '🛠️ Map';
     document.getElementById('btn-edit').classList.remove('fast');
-    waypoints = maps.at(3); resetGame();
+    waypoints = maps.at(6); resetGame();
   }
 }
 
-function changeMap() { currentMap = Number(document.getElementById('map-sel').value); waypoints = maps.at(currentMap); resetGame(); }
-function changeDiff() { diffMult = Number(document.getElementById('diff-sel').value); resetGame(); }
+function changeMap() { selectRoadMap(currentMap); }
+function changeDiff() {
+  const val = Number(document.getElementById('diff-sel').value);
+  if (val === 1 && (diffBest['0.75'] || 0) < 20) return updateDiffLocks();
+  if (val === 1.35 && (diffBest['1'] || 0) < 20) return updateDiffLocks();
+  diffMult = val;
+  resetGame();
+}
 
 function genFeatures() {
   pads = new Array(); rocks = new Array();
