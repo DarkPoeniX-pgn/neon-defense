@@ -50,7 +50,7 @@ let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 
 while (bestScores.length < 7) bestScores.push(0);
 let diffBest = JSON.parse(localStorage.getItem('tdDiffBest')) || { '0.75': 0, '1': 0, '1.35': 0 };
 
-let bestScores = JSON.parse(localStorage.getItem('tdBestMaps')) || new Array(0, 0, 0, 0);
+
 let gems = Number(localStorage.getItem('tdGems')) || 0;
 let tech = JSON.parse(localStorage.getItem('tdTech')) || { gold: 0, hp: 0, dmg: 0, disc: 0 };
 let unlocked = JSON.parse(localStorage.getItem('tdUnlocked')) || { tesla: false, plasma: false };
