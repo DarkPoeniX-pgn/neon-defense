@@ -91,10 +91,12 @@ function addHitFx(x, y, dmg, color) {
   }
 }
 function closeOverlays(except) {
-  new Array('lab-overlay', 'shop-overlay', 'rank-overlay', 'help-overlay').forEach(id => {
-    if (id !== except) document.getElementById(id).style.display = 'none';
+  new Array('lab-overlay', 'shop-overlay', 'rank-overlay', 'help-overlay', 'road-overlay').forEach(id => {
+    const el = document.getElementById(id);
+    if (el && id !== except) el.style.display = 'none';
   });
 }
+
 
 function toggleSound() { soundOn = !soundOn; document.getElementById('btn-snd').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) playSfx('coin'); }
 function togglePause() { paused = !paused; const b = document.getElementById('btn-pause'); b.textContent = paused ? '▶️' : '⏸️'; b.classList.toggle('fast', paused); }
