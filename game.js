@@ -1377,6 +1377,140 @@ loop = function() {
   _origLoop();
 };
 
+// ============================================================
+// === TÄGLICHE LOGIN-BELOHNUNG (7-TAGE-STREAK) ===
+// ============================================================
+const DAILY_STORAGE = 'neonTD_dailyReward_v1';
+const DAILY_REWARDS =;
+
+function getTodayStr() {
+  return new Date().toLocaleDateString('de-DE');
+}
+
+function getYesterdayStr() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toLocaleDateString('de-DE');
+}
+
+function getDailyState() {
+  let state = JSON.parse(localStorage.getItem(DAILY_STORAGE));
+  if (!state) state = { lastClaimDate: '', streakDay: 0 };
+
+  const today = getTodayStr();
+  const yesterday = getYesterdayStr();
+
+  // Wenn gestern und heute nichts abgeholt wurde -> Streak zurücksetzen
+  if (state.lastClaimDate && state.lastClaimDate !== today && state.lastClaimDate !== yesterday) {
+    state.streakDay = 0;
+  }
+  return state;
+}
+
+function canClaimDaily() {
+  const state = getDailyState();
+  return state.lastClaimDate !== getTodayStr();
+}
+
+function updateDailyButton() {
+  const btn = document.getElementById('btn-daily');
+  if (!btn) return;
+  const state = getDailyState();
+  const nextDay = (state.streakDay % 7) + 1;
+  const reward = DAILY_REWARDS.at(nextDay - 1);
+
+  if (canClaimDaily()) {
+    btn.textContent = `🎁 Tag ${nextDay} Belohnung: +${reward} 💎 abholen!`;
+    btn.style.opacity = '1';
+  } else {
+    btn.textContent = `✅ Tages-Belohnung abgeholt (Tag ${state.streakDay}/7)`;
+    btn.style.opacity = '0.75';
+  }
+}
+
+function openDailyReward() {
+  const ov = document.getElementById('daily-overlay');
+  if (!ov) return;
+  renderDailyGrid();
+  ov.style.display = 'flex';
+}
+
+function closeDailyReward() {
+  const ov = document.getElementById('daily-overlay');
+  if (ov) ov.style.display = 'none';
+  updateDailyButton();
+}
+
+function renderDailyGrid() {
+  const grid = document.getElementById('daily-grid');
+  const claimBtn = document.getElementById('btn-claim-daily');
+  const sub = document.getElementById('daily-sub');
+  if (!grid) return;
+
+  const state = getDailyState();
+  const ready = canClaimDaily();
+  const activeIdx = ready ? (state.streakDay % 7) : ((state.streakDay - 1 + 7) % 7);
+
+  if (sub) {
+    sub.textContent = ready
+      ? `Deine Serie: Tag ${activeIdx + 1} von 7 wartet auf dich!`
+      : `Stark! Komm morgen wieder für Tag ${((activeIdx + 1) % 7) + 1}!`;
+  }
+
+  grid.innerHTML = DAILY_REWARDS.map((amount, idx) => {
+    const isClaimed = idx < activeIdx || (idx === activeIdx && !ready);
+    const isCurrent = idx === activeIdx && ready;
+    const isMega = idx === 6;
+
+    return `
+      <div style="
+        grid-column:${isMega ? 'span 2' : 'span 1'};
+        padding:8px 4px;
+        border-radius:10px;
+        background:${isCurrent ? 'rgba(250,204,21,0.22)' : isClaimed ? 'rgba(34,197,94,0.16)' : 'rgba(15,23,42,0.85)'};
+        border:${isCurrent ? '2px solid #facc15' : isClaimed ? '1px solid #4ade80' : '1px solid #334155'};
+        text-align:center;">
+        <div style="font-size:10px;color:#94a3b8;font-weight:bold;">${isMega ? '👑 TAG 7' : 'TAG ' + (idx + 1)}</div>
+        <div style="font-size:14px;font-weight:900;color:${isCurrent ? '#fde047' : '#fff'};margin:3px 0;">+${amount} 💎</div>
+        <div style="font-size:10px;">${isClaimed ? '✅' : isCurrent ? '🎁 JETZT' : '🔒'}</div>
+      </div>
+    `;
+  }).join('');
+
+  if (claimBtn) {
+    const reward = DAILY_REWARDS.at(activeIdx);
+    claimBtn.disabled = !ready;
+    claimBtn.textContent = ready ? `💎 +${reward} Diamanten abholen` : '✅ Heute schon abgeholt';
+  }
+}
+
+function claimDailyReward() {
+  if (!canClaimDaily()) return;
+  const state = getDailyState();
+  const nextIdx = state.streakDay % 7;
+  const reward = DAILY_REWARDS.at(nextIdx);
+
+  gems += reward;
+  localStorage.setItem('tdGems', gems);
+
+  state.lastClaimDate = getTodayStr();
+  state.streakDay = nextIdx + 1;
+  localStorage.setItem(DAILY_STORAGE, JSON.stringify(state));
+
+  playSfx('coin');
+  updateUI();
+  if (typeof updateStartMenuUI === 'function') updateStartMenuUI();
+  renderDailyGrid();
+  updateDailyButton();
+}
+
+// Beim Starten automatisch prüfen & Button aktualisieren
+window.addEventListener('DOMContentLoaded', () => {
+  updateDailyButton();
+  if (canClaimDaily()) {
+    setTimeout(openDailyReward, 350);
+  }
+});
 
 
 resetGame();
