@@ -206,7 +206,17 @@
   </div>
 
 <script src="game.js?v=26"></script>
-  
+
+      <div id="daily-overlay" style="display:none;position:fixed;inset:0;background:rgba(4,7,15,0.94);backdrop-filter:blur(10px);justify-content:center;align-items:center;padding:16px;z-index:1100;">
+    <div class="start-card" style="max-width:380px;">
+      <h3 style="margin:0 0 6px;color:#facc15;font-size:19px;">🎁 Tägliche Login-Belohnung</h3>
+      <p id="daily-sub" style="font-size:12px;color:#cbd5e1;margin:0 0 12px;">Komm jeden Tag wieder für größere Diamanten-Boni!</p>
+      <div id="daily-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;"></div>
+      <button class="wave-btn" id="btn-claim-daily" onclick="claimDailyReward()" style="width:100%;padding:12px;font-size:15px;margin-bottom:8px;">💎 Jetzt abholen</button>
+      <button class="spd-btn" onclick="closeDailyReward()" style="width:100%;padding:8px;">Schließen</button>
+    </div>
+      </div>
+    
 </body>
 </html>
 
