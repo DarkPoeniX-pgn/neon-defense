@@ -1099,6 +1099,78 @@ function pickBestTarget(t, inRangeEnemies) {
   }
   return inRangeEnemies[0];
 }
+// === START-MENÜ STEUERUNG ===
+let inStartMenu = true;
+
+function updateStartMenuUI() {
+  const gEl = document.getElementById('menu-gems');
+  const bEl = document.getElementById('menu-best');
+  const mBtn = document.getElementById('menu-map-btn');
+  const mDiff = document.getElementById('menu-diff-sel');
+  if (gEl) gEl.textContent = gems;
+  if (bEl) bEl.textContent = Math.max.apply(null, bestScores);
+  if (mBtn && mapMeta[currentMap]) mBtn.textContent = '🗺️ Karte: ' + mapMeta[currentMap].name.replace(/^[^\s]+\s/, '');
+
+  if (mDiff) {
+    const normalUnlocked = (diffBest['0.75'] || 0) >= 20;
+    const extremUnlocked = (diffBest['1'] || 0) >= 20;
+    mDiff.options.item(0).text = '🟢 Schwierigkeit: Leicht';
+    mDiff.options.item(1).disabled = !normalUnlocked;
+    mDiff.options.item(1).text = normalUnlocked ? '🟡 Schwierigkeit: Normal' : '🔒 Normal (Leicht W20)';
+    mDiff.options.item(2).disabled = !extremUnlocked;
+    mDiff.options.item(2).text = extremUnlocked ? '🔴 Schwierigkeit: Extrem' : '🔒 Extrem (Normal W20)';
+    mDiff.value = String(diffMult);
+  }
+}
+
+function openStartMenu() {
+  inStartMenu = true;
+  paused = true;
+  closeOverlays('');
+  document.getElementById('gameover-overlay').style.display = 'none';
+  const scr = document.getElementById('start-screen');
+  if (scr) scr.style.display = 'flex';
+  updateStartMenuUI();
+}
+
+function startFromMenu() {
+  inStartMenu = false;
+  const scr = document.getElementById('start-screen');
+  if (scr) scr.style.display = 'none';
+  resetGame();
+  paused = false;
+  playSfx('coin');
+}
+
+function syncDiffFromMenu() {
+  const mDiff = document.getElementById('menu-diff-sel');
+  const gDiff = document.getElementById('diff-sel');
+  if (!mDiff) return;
+  if (gDiff) gDiff.value = mDiff.value;
+  changeDiff();
+  updateStartMenuUI();
+}
+
+function openRoadFromMenu() {
+  const scr = document.getElementById('start-screen');
+  if (scr) scr.style.display = 'none';
+  toggleRoad();
+}
+
+function openOverlayFromMenu(id) {
+  const scr = document.getElementById('start-screen');
+  if (scr) scr.style.display = 'none';
+  if (id === 'shop-overlay') toggleShop();
+  else if (id === 'lab-overlay') toggleLab();
+  else if (id === 'rank-overlay') toggleRank();
+  else if (id === 'quest-overlay' && typeof toggleQuests === 'function') toggleQuests();
+}
+
+// Beim Laden direkt im Start-Menü starten
+window.addEventListener('DOMContentLoaded', () => {
+  updateDiffLocks();
+  openStartMenu();
+});
 
 
 
