@@ -1561,37 +1561,7 @@ selectType = function(type) {
   }
 };
 
-// 2. Zwei-Stufen-Platzierung mit Reichweiten-Vorschau auf dem Canvas
-canvas.addEventListener('click', function(e) {
-  if (editMode || gameOver) return;
-  const rect = canvas.getBoundingClientRect();
-  const c = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / TILE);
-  const r = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / TILE);
 
-  const onRock = rocks.some(rk => rk.c === c && rk.r === r);
-  const onTower = towers.some(t => t.c === c && t.r === r);
-  if (onRock || onTower || isPathTile(c, r)) {
-    previewTile = null;
-    return;
-  }
-
-  // Erster Tipp: Nur Vorschau + Reichweitenkreis zeigen (wir fangen das sofortige Bauen ab)
-  if (!previewTile || previewTile.c !== c || previewTile.r !== r) {
-    // Falls der vorherige Listener den Turm gerade gebaut hat, rückgängig machen für Vorschau
-    const lastTower = towers.at(towers.length - 1);
-    if (lastTower && lastTower.c === c && lastTower.r === r && lastTower.lvl === 1 && !lastTower.confirmed) {
-      gold += lastTower.spent;
-      towers.pop();
-      updateUI();
-    }
-    previewTile = { c, r };
-  } else {
-    // Zweiter Tipp auf dasselbe Feld: Turm fest bestätigen!
-    const placed = towers.find(t => t.c === c && t.r === r);
-    if (placed) placed.confirmed = true;
-    previewTile = null;
-  }
-});
 
 // 3. Wellen-Gesamtanzahl für den Fortschrittsbalken merken
 const _origStartWaveV25 = startWave;
