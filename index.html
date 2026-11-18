@@ -65,23 +65,26 @@
       
   </div>
 
-  <div id="ui-sub">
-    <button class="spd-btn" onclick="toggleShop()">🛒 Shop</button>
-    <button class="spd-btn" onclick="toggleLab()">💎 Labor</button>
-    <button class="spd-btn" onclick="toggleRank()">🏆 Rang</button>
-    <button class="spd-btn" id="btn-edit" onclick="toggleEditor()">🛠️ Map</button>
+    <div id="ui-sub">
+    <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️ Pause</button>
+    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">⏩ 1x</button>
     <button class="spd-btn" id="btn-auto" onclick="toggleAuto()">🔄 Auto</button>
-    <button class="spd-btn" onclick="toggleHelp()">❓</button>
-    <button class="spd-btn" id="btn-snd" onclick="toggleSound()">🔊</button>
-    <button class="spd-btn" id="btn-pause" onclick="togglePause()">⏸️</button>
-    <button class="spd-btn" id="btn-spd" onclick="toggleSpeed()">1x</button>
-        <button class="spd-btn" id="btn-fs" onclick="toggleFullscreen()">⛶</button>
-        <button class="spd-btn" onclick="toggleQuests()">🏅 Ziele</button>
-    <button class="spd-btn" id="btn-ranges" onclick="toggleAllRanges()">👁️</button>
-     <button class="spd-btn" onclick="openStartMenu()">🏠</button>
-    
-    
+    <button class="spd-btn" id="btn-ranges" onclick="toggleAllRanges()">👁️ Sicht</button>
+    <button class="spd-btn menu-trigger" id="btn-more" onclick="toggleMoreMenu()">⚙️ Menü</button>
   </div>
+
+  <div id="more-menu" style="display:none;">
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleShop()"><span>🛒</span><b>Shop</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleLab()"><span>💎</span><b>Labor</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleQuests()"><span>🏅</span><b>Ziele</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleRank()"><span>🏆</span><b>Rang</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleEditor()"><span>🛠️</span><b>Editor</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleHelp()"><span>❓</span><b>Info</b></button>
+    <button class="menu-tile" id="btn-snd-tile" onclick="toggleSound()"><span id="btn-snd">🔊</span><b>Ton</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();toggleFullscreen()"><span id="btn-fs">⛶</span><b>Vollbild</b></button>
+    <button class="menu-tile" onclick="toggleMoreMenu();openStartMenu()"><span>🏠</span><b>Start</b></button>
+  </div>
+    
 
   <div class="canvas-wrap">
     <canvas id="game"></canvas>
