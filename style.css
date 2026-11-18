@@ -391,3 +391,75 @@ button:disabled {
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
+/* === AUFGERÄUMTE 5ER-STEUERLEISTE OBEN === */
+#ui-sub {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  padding: 6px;
+}
+
+#ui-sub .spd-btn {
+  width: 100%;
+  padding: 7px 2px;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#ui-sub .menu-trigger {
+  background: linear-gradient(180deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+/* === 3x3 KOMMANDANTEN-MENÜ (AUFKLAPPBAR) === */
+#more-menu {
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: rgba(13, 20, 36, 0.96);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 6px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 9px 4px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.96));
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 10px;
+  color: #e2e8f0;
+}
+
+.menu-tile span {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.menu-tile b {
+  font-size: 11px;
+  letter-spacing: 0.2px;
+}
+
+/* === FESTES 5ER-RASTER FÜR TURM-KARTEN UNTEN === */
+#ui-bottom {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+#ui-bottom .t-btn {
+  min-width: 0;
+  width: 100%;
+  padding: 7px 2px 6px;
+}
