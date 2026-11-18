@@ -8,6 +8,35 @@
 </head>
 <body>
   
+    <div id="start-screen">
+    <div class="start-card">
+      <div class="start-badge">⚡ CYBER ARCADE EDITION</div>
+      <h1 class="start-title">NEON<br><span>TOWER DEFENSE</span></h1>
+      <div class="start-stats">
+        <span>💎 <b id="menu-gems">0</b></span>
+        <span>🏆 Rekord: <b>Welle <span id="menu-best">0</span></b></span>
+      </div>
+
+      <div class="start-selectors">
+        <button class="spd-btn start-select-btn" id="menu-map-btn" onclick="openRoadFromMenu()">🗺️ Karte: K1: Neon-Pfad</button>
+        <select id="menu-diff-sel" class="start-select-btn" onchange="syncDiffFromMenu()">
+          <option value="0.75">🟢 Schwierigkeit: Leicht</option>
+          <option value="1" disabled>🔒 Normal (Leicht W20)</option>
+          <option value="1.35" disabled>🔒 Extrem (Normal W20)</option>
+        </select>
+      </div>
+
+      <button class="wave-btn start-play-btn" onclick="startFromMenu()">▶ SPIELEN</button>
+
+      <div class="start-sub-btns">
+        <button class="spd-btn" onclick="openOverlayFromMenu('shop-overlay')">🛒 Shop</button>
+        <button class="spd-btn" onclick="openOverlayFromMenu('lab-overlay')">💎 Labor</button>
+        <button class="spd-btn" onclick="openOverlayFromMenu('quest-overlay')">🏅 Ziele</button>
+        <button class="spd-btn" onclick="openOverlayFromMenu('rank-overlay')">🏆 Rang</button>
+      </div>
+    </div>
+    </div>
+  
   
   <div id="ui-top">
     <span>❤️ <b id="hp">20</b>/<b id="max-hp">20</b></span>
