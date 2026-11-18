@@ -1722,6 +1722,28 @@ function importSaveCode() {
   }
   }
 
+// === SCHADENS-TRACKER FÜR MVP-KRONE 👑 ===
+const _origStepMvp = step;
+step = function() {
+  const prevHp = enemies.map(e => ({ e, hp: e.hp }));
+  _origStepMvp();
+  if (towers.length > 0) {
+    let totalLost = 0;
+    prevHp.forEach(item => {
+      const lost = Math.max(0, item.hp - Math.max(0, item.e.hp));
+      totalLost += lost;
+    });
+    if (totalLost > 0) {
+      // Schaden anteilig auf aktive Kampf-Türme verteilen
+      const shooters = towers.filter(t => t.type !== 'mine');
+      if (shooters.length > 0) {
+        const share = totalLost / shooters.length;
+        shooters.forEach(t => { t.totalDmg = (t.totalDmg || 0) + share * (1 + t.lvl * 0.25); });
+      }
+    }
+  }
+};
+
 resetGame();
 loop();
                                           
