@@ -657,50 +657,168 @@ function drawEnemy(e) {
   ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(e.x - 12, e.y - e.radius - 10, 24, 4);
   ctx.fillStyle = '#4ade80'; ctx.fillRect(e.x - 12, e.y - e.radius - 10, 24 * (e.hp / e.maxHp), 4);
 }
-
 function draw() {
   if (!paused) gfxTick++;
-  const hint = document.getElementById("tutorial-hint"); if (hint) hint.style.display = (wave === 0 && towers.length === 0 && !editMode) ? "block" : "none";
-  
+  const hint = document.getElementById("tutorial-hint");
+  if (hint) hint.style.display = (wave === 0 && towers.length === 0 && !editMode) ? "block" : "none";
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  bgStars.forEach(s => { ctx.fillStyle = `rgba(148, 163, 184, ${0.25 + Math.sin(gfxTick * 0.03 + s.a * 6) * 0.2})`; ctx.fillRect(s.x, s.y, s.r, s.r); });
+
+  // 1. Ruhiger Sternenhimmel & feines Cyber-Raster
+  bgStars.forEach(s => {
+    ctx.fillStyle = `rgba(148, 163, 184, ${0.18 + Math.sin(gfxTick * 0.02 + s.a * 6) * 0.12})`;
+    ctx.fillRect(s.x, s.y, s.r, s.r);
+  });
+
   const pts = editMode ? editPts : waypoints;
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      if (!editMode && isPathTile(c, r)) { ctx.fillStyle = '#162036'; ctx.fillRect(c * TILE, r * TILE, TILE, TILE); }
-      ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)'; ctx.strokeRect(c * TILE, r * TILE, TILE, TILE);
+      const onPath = !editMode && isPathTile(c, r);
+      if (onPath) {
+        ctx.fillStyle = '#0f182a';
+        ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+      }
+      ctx.strokeStyle = onPath ? 'rgba(56, 189, 248, 0.12)' : 'rgba(30, 41, 59, 0.35)';
+      ctx.strokeRect(c * TILE + 0.5, r * TILE + 0.5, TILE - 1, TILE - 1);
     }
   }
+
+  // 2. Spezialfelder (Energie-Pads & Felsen) mit sauberem Rahmen
   if (!editMode) {
-    pads.forEach(p => { ctx.fillStyle = 'rgba(250, 204, 21, 0.14)'; ctx.fillRect(p.c * TILE + 3, p.r * TILE + 3, TILE - 6, TILE - 6); ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⚡', p.c * TILE + 20, p.r * TILE + 25); });
-    rocks.forEach(rk => { ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(rk.c * TILE + 20, rk.r * TILE + 20, 14, 0, Math.PI * 2); ctx.fill(); ctx.font = '15px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🪨', rk.c * TILE + 20, rk.r * TILE + 25); });
+    pads.forEach(p => {
+      const px = p.c * TILE, py = p.r * TILE;
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.10)';
+      ctx.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+      ctx.strokeRect(px + 3.5, py + 3.5, TILE - 7, TILE - 7);
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚡', px + 20, py + 25);
+    });
+    rocks.forEach(rk => {
+      const rx = rk.c * TILE + 20, ry = rk.r * TILE + 20;
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(rx, ry, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#475569';
+      ctx.stroke();
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🪨', rx, ry + 5);
+    });
   }
+
+  // 3. Straße mit ruhigen Energie-Impulsen in Laufrichtung
   if (pts.length > 0) {
-    ctx.strokeStyle = editMode ? '#facc15' : 'rgba(56, 189, 248, 0.25)'; ctx.lineWidth = 3; ctx.beginPath();
-    pts.forEach((w, idx) => { let wx = w.c * TILE + TILE / 2, wy = w.r * TILE + TILE / 2; idx === 0 ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy); });
-    ctx.stroke(); ctx.lineWidth = 1;
-    const start = pts.at(0), end = pts.at(pts.length - 1);
-    ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(start.c * TILE + TILE / 2, start.r * TILE + TILE / 2, 12, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(end.c * TILE + TILE / 2, end.r * TILE + TILE / 2, 13, 0, Math.PI * 2); ctx.fill();
-  }
-  enemies.forEach(drawEnemy);
-    towers.forEach(t => {
-    const spec = towerTypes[t.type], range = (spec.range + (t.lvl - 1) * 16) * t.boost;
-    if (showAllRanges || (typeof selectedTower !== 'undefined' && selectedTower === t)) {
-      ctx.beginPath(); ctx.arc(t.x, t.y, range, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.14)'; ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)'; ctx.stroke();
+    ctx.save();
+    ctx.strokeStyle = editMode ? '#facc15' : 'rgba(56, 189, 248, 0.22)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach((w, idx) => {
+      const wx = w.c * TILE + TILE / 2, wy = w.r * TILE + TILE / 2;
+      idx === 0 ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy);
+    });
+    ctx.stroke();
+
+    // Dezente Strömungs-Punkte (zeigen ruhig die Laufrichtung)
+    if (!editMode && pts.length > 1) {
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 22]);
+      ctx.lineDashOffset = -(gfxTick * 0.45);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
-    
-  
-       
+    ctx.restore();
+
+    // Start-Portal & Ziel-Kern
+    const start = pts.at(0), end = pts.at(pts.length - 1);
+    const sx = start.c * TILE + TILE / 2, sy = start.r * TILE + TILE / 2;
+    const ex = end.c * TILE + TILE / 2, ey = end.r * TILE + TILE / 2;
+
+    ctx.strokeStyle = '#f43f5e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 11 + Math.sin(gfxTick * 0.06) * 1.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.25)';
+    ctx.beginPath();
+    ctx.arc(ex, ey, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.arc(ex, ey, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 1;
+  }
+
+  // 4. Gegner
+  enemies.forEach(drawEnemy);
+
+  // 5. Türme mit dunklem Sockel (für klare Trennung bei vielen Türmen!)
+  towers.forEach(t => {
+    const spec = towerTypes[t.type];
+    const range = (spec.range + (t.lvl - 1) * 16) * t.boost;
+    if (showAllRanges || (typeof selectedTower !== 'undefined' && selectedTower === t)) {
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, range, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.10)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.stroke();
+    }
+
+    // Dunkles Podest unter jedem Turm -> verhindert Überladung bei 30+ Türmen
+    ctx.fillStyle = '#0b1221';
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = selectedTower === t ? '#facc15' : 'rgba(148, 163, 184, 0.28)';
+    ctx.lineWidth = selectedTower === t ? 2 : 1;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+
     drawTower(t);
   });
-  bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.fill(); });
-  effects.forEach(fx => { ctx.globalAlpha = Math.min(1, fx.life / 12); ctx.fillStyle = fx.color; fx.dot ? ctx.fillRect(fx.x, fx.y, 3, 3) : (ctx.font = 'bold 11px sans-serif', ctx.textAlign = 'center', ctx.fillText(fx.txt, fx.x, fx.y)); });
+
+  // 6. Projektile mit feinem Kern
+  bullets.forEach(b => {
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 7. Schwebetexte & Partikel
+  effects.forEach(fx => {
+    ctx.globalAlpha = Math.min(1, fx.life / 12);
+    ctx.fillStyle = fx.color;
+    if (fx.dot) {
+      ctx.fillRect(fx.x, fx.y, 2.5, 2.5);
+    } else {
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(fx.txt, fx.x, fx.y);
+    }
+  });
   ctx.globalAlpha = 1;
-  if (flashTimer > 0) { ctx.fillStyle = `rgba(168, 85, 247, ${flashTimer * 0.04})`; ctx.fillRect(0, 0, canvas.width, canvas.height); flashTimer--; }
-}
+
+  if (flashTimer > 0) {
+    ctx.fillStyle = `rgba(168, 85, 247, ${flashTimer * 0.03})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    flashTimer--;
+  }
+            }
+
+
 
 function loop() {
   for (let s = 0; s < gameSpeed; s++) step();
