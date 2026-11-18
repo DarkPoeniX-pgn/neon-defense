@@ -289,3 +289,105 @@ button:disabled {
   color: #fff;
   padding: 6px 10px;
 }
+/* === START-MENÜ (TITELBILDSCHIRM) === */
+#start-screen {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.22) 0%, transparent 55%),
+    rgba(4, 7, 15, 0.94);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  z-index: 100;
+}
+
+.start-card {
+  width: 100%;
+  max-width: 390px;
+  background: linear-gradient(180deg, rgba(22, 33, 56, 0.95), rgba(10, 16, 30, 0.98));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 18px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.75),
+    0 0 30px rgba(56, 189, 248, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.start-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+.start-title {
+  margin: 0 0 14px;
+  font-size: 32px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-shadow: 0 0 22px rgba(56, 189, 248, 0.5);
+}
+
+.start-title span {
+  font-size: 20px;
+  color: #38bdf8;
+  letter-spacing: 2px;
+}
+
+.start-stats {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.start-stats span {
+  background: rgba(9, 14, 26, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 5px 12px;
+  border-radius: 10px;
+}
+
+.start-selectors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.start-select-btn {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.start-play-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 17px;
+  letter-spacing: 1px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.start-sub-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
