@@ -728,9 +728,11 @@ function draw() {
       ctx.strokeStyle = 'rgba(125, 211, 252, 0.35)';
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 22]);
-      ctx.lineDashOffset = -(gfxTick * 0.45);
-      ctx.stroke();
-      ctx.setLineDash([]);
+         ctx.setLineDash(new Array(4, 14));
+   ctx.lineDashOffset = -(gfxTick * 0.45);
+   ctx.stroke();
+   ctx.setLineDash(new Array());
+      
     }
     ctx.restore();
 
