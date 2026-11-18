@@ -1381,7 +1381,7 @@ loop = function() {
 // === TÄGLICHE LOGIN-BELOHNUNG (7-TAGE-STREAK) ===
 // ============================================================
 const DAILY_STORAGE = 'neonTD_dailyReward_v1';
-const DAILY_REWARDS =;
+const DAILY_REWARDS = new Array(5, 8, 12, 15, 20, 25, 40);
 
 function getTodayStr() {
   return new Date().toLocaleDateString('de-DE');
