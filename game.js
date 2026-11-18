@@ -794,6 +794,34 @@ function draw() {
     drawTower(t);
   });
 
+    if (typeof previewTile !== 'undefined' && previewTile && !editMode && !gameOver) {
+    const pSpec = towerTypes[buildType];
+    if (pSpec) {
+      const px = previewTile.c * TILE + TILE / 2;
+      const py = previewTile.r * TILE + TILE / 2;
+      const onPad = pads.some(p => p.c === previewTile.c && p.r === previewTile.r);
+      const rBoost = onPad ? 1.25 : 1;
+      if (pSpec.range > 0) {
+        ctx.beginPath();
+        ctx.arc(px, py, pSpec.range * rBoost, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.18)';
+        ctx.fill();
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(previewTile.c * TILE + 2, previewTile.r * TILE + 2, TILE - 4, TILE - 4);
+      ctx.lineWidth = 1;
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillStyle = '#4ade80';
+      ctx.textAlign = 'center';
+      ctx.fillText('✓ Bauen', px, py + 4);
+    }
+    }
+  
   // 6. Projektile mit feinem Kern
   bullets.forEach(b => {
     ctx.fillStyle = b.color;
