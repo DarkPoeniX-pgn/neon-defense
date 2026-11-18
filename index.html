@@ -85,16 +85,16 @@
   💡 Tippe auf ein freies Feld zum Bauen & drücke <b>▶ Welle</b>!
     </div>
     
-
     <div id="gameover-overlay" style="display:none;">
       <h2>💀 GAME OVER</h2>
       <p>Du hast <b>Welle <span id="end-wave">0</span></b> erreicht!</p>
-      <button class="wave-btn" style="padding:12px 24px;font-size:16px;" onclick="resetGame()">🔄 Nochmal spielen</button>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="wave-btn" style="padding:12px 18px;font-size:15px;" onclick="resetGame()">🔄 Nochmal</button>
+        <button class="spd-btn" style="padding:12px 18px;font-size:15px;" onclick="openStartMenu()">🏠 Menü</button>
+      </div>
     </div>
-       <div style="display:flex;gap:8px;margin-top:6px;">
-     <button class="wave-btn" style="padding:12px 18px;font-size:15px;" onclick="resetGame()">🔄 Nochmal</button>
-     <button class="spd-btn" style="padding:12px 18px;font-size:15px;" onclick="openStartMenu()">🏠 Menü</button>
-       </div>
+    
+    
     
     <div id="shop-overlay" style="display:none;">
       <h3>🛒 Diamanten-Turm-Shop (<span id="shop-gems">0</span> 💎)</h3>
