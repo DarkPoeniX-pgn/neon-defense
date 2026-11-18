@@ -1522,6 +1522,206 @@ function toggleMoreMenu() {
   if (btn) btn.textContent = isOpen ? '⚙️ Menü' : '✖ Zu';
 }
 
+// ============================================================
+// === FEINSCHLIFF v2.5: BAU-VORSCHAU, MVP, BALKEN & BACKUP ===
+// ============================================================
+
+let previewTile = null;
+let waveTotalEnemies = 0;
+
+const TOWER_HINTS = {
+  laser:   '🔫 Laser: Schneller Allrounder für den Start',
+  ice:     '❄️ Eis: Verlangsamt Gegner um 50%',
+  sniper:  '🎯 Sniper: Riesen-Reichweite, ideal gegen 🔵 Panzer',
+  rocket:  '🚀 Rakete: Flächenschaden gegen dichte Gruppen',
+  mine:    '⛏️ Bank: +35💰/Stufe nach jeder Welle + beschleunigt Nachbarn',
+  tesla:   '⚡ Tesla: Kettenblitz springt auf mehrere Gegner',
+  plasma:  '☢️ Plasma: Extremer Dauerschaden gegen Bosse',
+  cryo:    '🌪️ Kryo-Sturm: Flächen-Frost um den gesamten Turm',
+  orbital: '☄️ Orbital-Laser: Deckt fast die halbe Karte ab',
+  void:    '🌌 Schwarzes Loch: Massive Gravitations-Explosionen'
+};
+
+// 1. Turm-Kurzinfo beim Auswählen anzeigen
+const _origSelectType = selectType;
+selectType = function(type) {
+  _origSelectType(type);
+  previewTile = null;
+  const pv = document.getElementById('wave-progress-bar');
+  const wp = document.getElementById('wave-preview');
+  if (wp && !waveRunning && TOWER_HINTS[type]) {
+    wp.textContent = TOWER_HINTS[type];
+  }
+};
+
+// 2. Zwei-Stufen-Platzierung mit Reichweiten-Vorschau auf dem Canvas
+canvas.addEventListener('click', function(e) {
+  if (editMode || gameOver) return;
+  const rect = canvas.getBoundingClientRect();
+  const c = Math.floor(((e.clientX - rect.left) * (canvas.width / rect.width)) / TILE);
+  const r = Math.floor(((e.clientY - rect.top) * (canvas.height / rect.height)) / TILE);
+
+  const onRock = rocks.some(rk => rk.c === c && rk.r === r);
+  const onTower = towers.some(t => t.c === c && t.r === r);
+  if (onRock || onTower || isPathTile(c, r)) {
+    previewTile = null;
+    return;
+  }
+
+  // Erster Tipp: Nur Vorschau + Reichweitenkreis zeigen (wir fangen das sofortige Bauen ab)
+  if (!previewTile || previewTile.c !== c || previewTile.r !== r) {
+    // Falls der vorherige Listener den Turm gerade gebaut hat, rückgängig machen für Vorschau
+    const lastTower = towers.at(towers.length - 1);
+    if (lastTower && lastTower.c === c && lastTower.r === r && lastTower.lvl === 1 && !lastTower.confirmed) {
+      gold += lastTower.spent;
+      towers.pop();
+      updateUI();
+    }
+    previewTile = { c, r };
+  } else {
+    // Zweiter Tipp auf dasselbe Feld: Turm fest bestätigen!
+    const placed = towers.find(t => t.c === c && t.r === r);
+    if (placed) placed.confirmed = true;
+    previewTile = null;
+  }
+});
+
+// 3. Wellen-Gesamtanzahl für den Fortschrittsbalken merken
+const _origStartWaveV25 = startWave;
+startWave = function() {
+  previewTile = null;
+  _origStartWaveV25();
+  waveTotalEnemies = spawnQueue.length + enemies.length;
+  if (wave % 5 === 0) {
+    effects.push({ x: 240, y: 150, txt: '⚠️ BOSS-WELLE ' + wave + '!', color: '#f43f5e', life: 85, vy: -0.3 });
+  }
+};
+
+// 4. Vorschau-Kreis & MVP-Krone auf dem Canvas zeichnen + Fortschrittsbalken + Game-Over-MVP
+const _origDrawV25 = draw;
+draw = function() {
+  _origDrawV25();
+
+  // Reichweiten-Vorschau beim Bauen zeichnen
+  if (previewTile && !editMode && !gameOver) {
+    const spec = towerTypes[buildType];
+    if (spec) {
+      const px = previewTile.c * TILE + TILE / 2;
+      const py = previewTile.r * TILE + TILE / 2;
+      const onPad = pads.some(p => p.c === previewTile.c && p.r === previewTile.r);
+      const rBoost = onPad ? 1.25 : 1;
+
+      if (spec.range > 0) {
+        ctx.beginPath();
+        ctx.arc(px, py, spec.range * rBoost, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.14)';
+        ctx.fill();
+        ctx.strokeStyle = '#4ade80';
+        ctx.setLineDash(new Array(5, 5));
+        ctx.stroke();
+        ctx.setLineDash(new Array());
+      }
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(previewTile.c * TILE + 2, previewTile.r * TILE + 2, TILE - 4, TILE - 4);
+      ctx.lineWidth = 1;
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillStyle = '#4ade80';
+      ctx.textAlign = 'center';
+      ctx.fillText('✓ Tippen', px, py + 4);
+    }
+  }
+
+  // MVP-Krone über dem stärksten Turm
+  if (towers.length > 0) {
+    let mvp = towers.at(0);
+    towers.forEach(t => { if ((t.totalDmg || 0) > (mvp.totalDmg || 0)) mvp = t; });
+    if ((mvp.totalDmg || 0) > 0) {
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('👑', mvp.x, mvp.y - 17);
+    }
+  }
+
+  // Wellen-Fortschrittsbalken aktualisieren
+  const bar = document.getElementById('wave-progress-bar');
+  if (bar) {
+    if (!waveRunning || waveTotalEnemies <= 0) {
+      bar.style.width = '0%';
+    } else {
+      const remaining = spawnQueue.length + enemies.length;
+      const pct = Math.max(0, Math.min(100, ((waveTotalEnemies - remaining) / waveTotalEnemies) * 100));
+      bar.style.width = pct + '%';
+    }
+  }
+
+  // Game-Over MVP-Text aktualisieren
+  if (gameOver) {
+    const mvpEl = document.getElementById('mvp-summary');
+    if (mvpEl && towers.length > 0) {
+      let mvp = towers.at(0);
+      towers.forEach(t => { if ((t.totalDmg || 0) > (mvp.totalDmg || 0)) mvp = t; });
+      const spec = towerTypes[mvp.type];
+      mvpEl.textContent = (mvp.totalDmg || 0) > 0
+        ? `👑 MVP-Turm: ${spec.name} (${Math.round(mvp.totalDmg).toLocaleString('de-DE')} Schaden)`
+        : '';
+    }
+  }
+};
+
+// 5. Spielstand-Backup (Export & Import als Text-Code)
+const BACKUP_KEYS = new Array(
+  'tdCustomMap', 'tdBestMaps', 'tdDiffBest', 'tdGems', 'tdTech',
+  'tdUnlocked', 'tdName', 'neonTD_highscores', 'neonTD_playerName',
+  'neonTD_quests_v1', 'neonTD_dailyReward_v1'
+);
+
+function openBackupModal() {
+  const ov = document.getElementById('backup-overlay');
+  if (!ov) return;
+  ov.style.display = 'flex';
+  exportSaveCode(true);
+}
+
+function closeBackupModal() {
+  const ov = document.getElementById('backup-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+function exportSaveCode(silent) {
+  const payload = {};
+  BACKUP_KEYS.forEach(k => {
+    const val = localStorage.getItem(k);
+    if (val !== null) payload[k] = val;
+  });
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const box = document.getElementById('backup-code');
+  if (box) {
+    box.value = code;
+    box.select();
+  }
+  if (!silent && navigator.clipboard) {
+    navigator.clipboard.writeText(code).catch(() => {});
+    alert('✅ Backup-Code wurde erstellt und in die Zwischenablage kopiert!');
+  }
+}
+
+function importSaveCode() {
+  const box = document.getElementById('backup-code');
+  if (!box || !box.value.trim()) return alert('Bitte zuerst einen Backup-Code einfügen!');
+  try {
+    const jsonStr = decodeURIComponent(escape(atob(box.value.trim())));
+    const payload = JSON.parse(jsonStr);
+    BACKUP_KEYS.forEach(k => {
+      if (payload[k] !== undefined) localStorage.setItem(k, payload[k]);
+    });
+    alert('🎉 Spielstand erfolgreich wiederhergestellt! Die Seite wird jetzt neu geladen.');
+    location.reload();
+  } catch (err) {
+    alert('❌ Ungültiger Backup-Code! Bitte prüfe, ob der Code vollständig kopiert wurde.');
+  }
+  }
+
 resetGame();
 loop();
                                           
