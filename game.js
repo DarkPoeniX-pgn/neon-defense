@@ -1512,6 +1512,15 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// === KOMMANDANTEN-MENÜ UMSCHALTEN ===
+function toggleMoreMenu() {
+  const m = document.getElementById('more-menu');
+  const btn = document.getElementById('btn-more');
+  if (!m) return;
+  const isOpen = m.style.display === 'grid';
+  m.style.display = isOpen ? 'none' : 'grid';
+  if (btn) btn.textContent = isOpen ? '⚙️ Menü' : '✖ Zu';
+}
 
 resetGame();
 loop();
