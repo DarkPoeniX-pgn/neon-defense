@@ -1172,6 +1172,211 @@ window.addEventListener('DOMContentLoaded', () => {
   openStartMenu();
 });
 
+// ============================================================
+// === MEGA-UPDATE v2.0: PERKS, EVOLUTIONEN, SKILLS, SYNERGIEN ===
+// ============================================================
+
+let runPerks = { dmg: 1, range: 1, rate: 1, gold: 1, bossDmg: 1, splash: 1 };
+let overdriveTimer = 0, overdriveCd = 0;
+let freezeAllCd = 0;
+let lastPerkWave = 0;
+
+const PERK_POOL = [
+  { id: 'dmg',     title: '⚔️ Cyber-Munition',   desc: '+18% Turm-Schaden für alle Türme',      apply: () => { runPerks.dmg += 0.18; } },
+  { id: 'range',   title: '🔭 Langstrecken-Optik',desc: '+20% Reichweite für alle Türme',        apply: () => { runPerks.range += 0.20; } },
+  { id: 'rate',    title: '⚡ Übertaktung',       desc: '+15% schnellere Feuerrate',             apply: () => { runPerks.rate += 0.15; } },
+  { id: 'gold',    title: '💰 Zinseszins',        desc: '+25% Gold durch Kills & Banken',        apply: () => { runPerks.gold += 0.25; } },
+  { id: 'bossDmg', title: '👑 Titanen-Jäger',     desc: '+40% Extra-Schaden gegen Bosse',        apply: () => { runPerks.bossDmg += 0.40; } },
+  { id: 'splash',  title: '💥 Ketten-Sprengstoff',desc: '+30% Explosions-Radius',                apply: () => { runPerks.splash += 0.30; } },
+  { id: 'heal',    title: '❤️ Reaktor-Reparatur', desc: 'Stellt sofort +8 Leben & +150💰 wieder her', apply: () => { hp = Math.min(maxHp, hp + 8); gold += 150; } }
+];
+
+const EVO_SPECS = {
+  laser:   { name: '🔥 Hyper-Strahl',    desc: '+65% Schaden & brennt Ziele',     cost: 350 },
+  ice:     { name: '🧊 Permafrost',      desc: 'Friert Ziele kurz komplett ein',   cost: 380 },
+  sniper:  { name: '💀 Railgun-Crit',    desc: '30% Chance auf 3x Kopfschuss',     cost: 450 },
+  rocket:  { name: '☢️ Cluster-Bombe',   desc: '+50% Explosionsradius & Schaden',  cost: 480 },
+  mine:    { name: '🏦 Mega-Tresor',     desc: '+500💰 pro Welle + Nachbar-Boost', cost: 420 },
+  tesla:   { name: '⛈️ Gewitter-Kern',   desc: 'Trifft bis zu 5 Ziele gleichzeitig',cost: 520 },
+  plasma:  { name: '☀️ Sonnen-Fackel',   desc: '+60% DPS & schmilzt Rüstung',      cost: 600 },
+  cryo:    { name: '❄️ Polar-Vortex',    desc: 'Verlangsamt & schädigt massiv',    cost: 550 },
+  orbital: { name: '🛰️ Todesstern',      desc: 'Doppelter Laser-Schaden',          cost: 700 },
+  void:    { name: '🌀 Singularität',    desc: 'Zieht Gegner zurück & +50% DMG',   cost: 850 }
+};
+
+// 1. Kommandanten-Skills (Cooldown)
+function triggerOverdrive() {
+  if (overdriveCd > 0 || gameOver || paused) return;
+  overdriveTimer = 480; // 8 Sekunden
+  overdriveCd = 1800;   // 30 Sekunden Cooldown
+  playSfx('coin');
+  effects.push({ x: 240, y: 190, txt: '⚡ OVERDRIVE AKTIV!', color: '#38bdf8', life: 70, vy: -0.4 });
+}
+
+function triggerFreezeAll() {
+  if (freezeAllCd > 0 || gameOver || paused || enemies.length === 0) return;
+  freezeAllCd = 2100; // 35 Sekunden Cooldown
+  flashTimer = 10;
+  playSfx('boom');
+  enemies.forEach(e => { e.slowTimer = 240; e.frozenTimer = 110; });
+  effects.push({ x: 240, y: 190, txt: '❄️ KRYO-IMPULS!', color: '#a5f3fc', life: 70, vy: -0.4 });
+}
+
+// 2. Turm-Evolution ab Level 6
+function evolveTower() {
+  if (!selectedTower || selectedTower.lvl < 6 || selectedTower.evolved) return;
+  const evo = EVO_SPECS[selectedTower.type];
+  if (!evo || gold < evo.cost) return;
+  gold -= evo.cost;
+  selectedTower.spent += evo.cost;
+  selectedTower.evolved = true;
+  playSfx('coin');
+  effects.push({ x: selectedTower.x, y: selectedTower.y - 16, txt: evo.name + '!', color: '#c084fc', life: 65, vy: -0.6 });
+  updateUI();
+  updateUpgradeBar();
+}
+
+// Upgrade-Bar um Evolution erweitern
+const _origUpdateUpgradeBar = updateUpgradeBar;
+updateUpgradeBar = function() {
+  _origUpdateUpgradeBar();
+  const evoBtn = document.getElementById('btn-evo');
+  if (!evoBtn || !selectedTower) return;
+  if (selectedTower.lvl >= 6 && !selectedTower.evolved) {
+    const evo = EVO_SPECS[selectedTower.type];
+    evoBtn.style.display = 'inline-block';
+    evoBtn.textContent = `🧬 ${evo.name} (${evo.cost}💰)`;
+    evoBtn.disabled = gold < evo.cost;
+  } else {
+    evoBtn.style.display = 'none';
+  }
+  if (selectedTower.evolved) {
+    document.getElementById('sel-info').textContent += ' 🧬EVO';
+  }
+};
+
+// 3. Roguelike-Perk-Auswahl alle 5 Wellen
+function openPerkChoice() {
+  const ov = document.getElementById('perk-overlay');
+  const box = document.getElementById('perk-cards');
+  if (!ov || !box) return;
+  paused = true;
+  const shuffled = PERK_POOL.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+  box.innerHTML = shuffled.map(p => `
+    <button class="upg" onclick="pickPerk('${p.id}')" style="width:100%;text-align:left;padding:10px 12px;background:rgba(30,41,59,0.95);color:#f8fafc;border:1px solid #facc15;">
+      <div style="font-size:13px;font-weight:800;color:#fde047;">${p.title}</div>
+      <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">${p.desc}</div>
+    </button>
+  `).join('');
+  ov.style.display = 'flex';
+}
+
+function pickPerk(id) {
+  const perk = PERK_POOL.find(p => p.id === id);
+  if (perk) perk.apply();
+  const ov = document.getElementById('perk-overlay');
+  if (ov) ov.style.display = 'none';
+  paused = false;
+  playSfx('coin');
+  updateUI();
+}
+
+// 4. Neue Gegner (Phantom & Splitter) + Boss-Perk-Trigger + Skills + Synergien
+const _origResetGame = resetGame;
+resetGame = function() {
+  runPerks = { dmg: 1, range: 1, rate: 1, gold: 1, bossDmg: 1, splash: 1 };
+  overdriveTimer = 0; overdriveCd = 0; freezeAllCd = 0; lastPerkWave = 0;
+  const ov = document.getElementById('perk-overlay');
+  if (ov) ov.style.display = 'none';
+  _origResetGame();
+};
+
+const _origStartWave = startWave;
+startWave = function() {
+  _origStartWave();
+  // Ab Welle 7: Phantom-Drohnen (werden kurz unsichtbar & schnell)
+  if (wave >= 7) {
+    const phantoms = Math.floor((wave - 5) / 2);
+    for (let i = 0; i < phantoms; i++) {
+      spawnQueue.push({
+        x: waypoints.at(0).c * TILE + TILE / 2, y: waypoints.at(0).r * TILE + TILE / 2, wp: 1,
+        hp: (45 + wave * 20) * diffMult, maxHp: (45 + wave * 20) * diffMult,
+        speed: 2.05, reward: 14, slowTimer: 0, isBoss: false, armor: 1,
+        phantom: true, phaseTick: i * 30, color: '#94a3b8', radius: 10
+      });
+    }
+  }
+  // Ab Welle 11: Splitter-Zellen (teilen sich beim Tod in 3 Mini-Drohnen)
+  if (wave >= 11) {
+    const splitters = Math.floor((wave - 9) / 2);
+    for (let i = 0; i < splitters; i++) {
+      spawnQueue.push({
+        x: waypoints.at(0).c * TILE + TILE / 2, y: waypoints.at(0).r * TILE + TILE / 2, wp: 1,
+        hp: (95 + wave * 32) * diffMult, maxHp: (95 + wave * 32) * diffMult,
+        speed: 1.15, reward: 18, slowTimer: 0, isBoss: false, armor: 0.85,
+        splitter: true, color: '#10b981', radius: 13
+      });
+    }
+  }
+};
+
+// Synergien + Skill-Cooldowns + Perk-Auswahl im Hauptloop
+const _origLoop = loop;
+loop = function() {
+  if (!paused && !gameOver) {
+    if (overdriveTimer > 0) overdriveTimer--;
+    if (overdriveCd > 0) overdriveCd--;
+    if (freezeAllCd > 0) freezeAllCd--;
+
+    // Nach jedem Boss (Welle 5, 10, 15, ...) Perk-Auswahl öffnen
+    if (!waveRunning && wave > 0 && wave % 5 === 0 && lastPerkWave !== wave) {
+      lastPerkWave = wave;
+      openPerkChoice();
+    }
+
+    // Splitter-Gegner beim Sterben aufteilen & Frost-Stun anwenden
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies.at(i);
+      if (e.frozenTimer > 0) {
+        e.frozenTimer--;
+        e.slowTimer = Math.max(e.slowTimer, 5);
+      }
+      if (e.hp <= 0 && e.splitter && !e.didSplit) {
+        e.didSplit = true;
+        for (let k = 0; k < 3; k++) {
+          enemies.push({
+            x: e.x + (k - 1) * 8, y: e.y + (k - 1) * 6, wp: e.wp,
+            hp: e.maxHp * 0.25, maxHp: e.maxHp * 0.25,
+            speed: 2.35, reward: 5, slowTimer: 0, isBoss: false, armor: 1,
+            color: '#6ee7b7', radius: 7
+          });
+        }
+      }
+    }
+
+    // Overdrive & Nachbarschafts-Synergien beschleunigen Turm-Cooldowns
+    towers.forEach(t => {
+      const hasBankNeighbor = towers.some(o => o !== t && o.type === 'mine' && Math.abs(o.c - t.c) <= 1 && Math.abs(o.r - t.r) <= 1);
+      const bonusTicks = (overdriveTimer > 0 ? 1 : 0) + (hasBankNeighbor && Math.random() < 0.18 ? 1 : 0) + (t.evolved && Math.random() < 0.35 ? 1 : 0);
+      if (t.cd > 0 && bonusTicks > 0) t.cd = Math.max(0, t.cd - bonusTicks);
+    });
+  }
+
+  // Skill-Buttons aktualisieren
+  const odBtn = document.getElementById('btn-overdrive');
+  const frBtn = document.getElementById('btn-freezeall');
+  if (odBtn) {
+    odBtn.disabled = overdriveCd > 0 || gameOver;
+    odBtn.textContent = overdriveTimer > 0 ? `⚡ AKTIV (${Math.ceil(overdriveTimer / 60)}s)` : overdriveCd > 0 ? `⚡ Overdrive (${Math.ceil(overdriveCd / 60)}s)` : '⚡ Overdrive (Bereit)';
+  }
+  if (frBtn) {
+    frBtn.disabled = freezeAllCd > 0 || gameOver;
+    frBtn.textContent = freezeAllCd > 0 ? `❄️ Kryo-Impuls (${Math.ceil(freezeAllCd / 60)}s)` : '❄️ Kryo-Impuls (Bereit)';
+  }
+
+  _origLoop();
+};
+
 
 
 resetGame();
