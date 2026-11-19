@@ -1749,6 +1749,143 @@ step = function() {
   }
 };
 
+// ============================================================
+// === ENDGAME & KOMFORT v3.0: PRESTIGE, STILE, FRÜHE WELLE ===
+// ============================================================
+
+let prestigeLevel = Number(localStorage.getItem('tdPrestige')) || 0;
+let commanderClass = localStorage.getItem('tdClass') || 'econ';
+let recordBannerShown = false;
+
+// 1. Kommandanten-Spielstil wechseln
+function changeCommanderClass() {
+  const sel = document.getElementById('menu-class-sel');
+  if (!sel) return;
+  commanderClass = sel.value;
+  localStorage.setItem('tdClass', commanderClass);
+}
+
+// 2. Prestige-System (Reaktor-Neustart ab Welle 40)
+function updatePrestigeUI() {
+  const btn = document.getElementById('btn-prestige');
+  if (!btn) return;
+  const maxW = Math.max.apply(null, bestScores);
+  const reqWave = 40 + prestigeLevel * 10;
+  if (maxW >= reqWave) {
+    btn.disabled = false;
+    btn.textContent = `✨ PRESTIGE AUSLÖSEN! -> Stufe ${prestigeLevel + 1} (+${(prestigeLevel + 1) * 10}% DMG)`;
+    btn.style.background = 'linear-gradient(180deg, #fde047, #f59e0b)';
+  } else {
+    btn.disabled = true;
+    btn.textContent = `✨ Prestige Stufe ${prestigeLevel} (+${prestigeLevel * 10}% DMG) • Ziel: W${reqWave}`;
+    btn.style.background = '';
+  }
+}
+
+function triggerPrestige() {
+  const maxW = Math.max.apply(null, bestScores);
+  const reqWave = 40 + prestigeLevel * 10;
+  if (maxW < reqWave) return;
+  if (!confirm(`✨ Reaktor-Prestige starten?\n\nDu erhältst dauerhaft +10% Turm-Schaden (Gesamt: +${(prestigeLevel + 1) * 10}%).\nDeine Karten-Rekorde werden für die neue Prestige-Runde zurückgesetzt.`)) return;
+
+  prestigeLevel++;
+  localStorage.setItem('tdPrestige', prestigeLevel);
+  bestScores = new Array(0, 0, 0, 0, 0, 0, 0);
+  localStorage.setItem('tdBestMaps', JSON.stringify(bestScores));
+  gems += 25;
+  localStorage.setItem('tdGems', gems);
+  playSfx('coin');
+  updatePrestigeUI();
+  if (typeof updateStartMenuUI === 'function') updateStartMenuUI();
+  alert(`🎉 Glückwunsch! Du bist jetzt Prestige-Stufe ${prestigeLevel} (+${prestigeLevel * 10}% Schaden & +25 💎 Bonus)!`);
+}
+
+// Start-Menü UI mit Prestige & Spielstil synchronisieren
+if (typeof updateStartMenuUI === 'function') {
+  const _origMenuV3 = updateStartMenuUI;
+  updateStartMenuUI = function() {
+    _origMenuV3();
+    const cSel = document.getElementById('menu-class-sel');
+    if (cSel) cSel.value = commanderClass;
+    updatePrestigeUI();
+  };
+}
+
+// 3. Spielstart an Kommandanten-Spielstil anpassen
+const _origResetV3 = resetGame;
+resetGame = function() {
+  _origResetV3();
+  recordBannerShown = false;
+  if (commanderClass === 'econ') {
+    gold += 100;
+  } else if (commanderClass === 'def') {
+    maxHp += 10;
+    hp = maxHp;
+  }
+  updateUI();
+};
+
+// 4. Prestige- & Taktiker-Schadensbonus im Kampf anwenden + Neuer-Rekord-Banner
+const _origStepV3 = step;
+step = function() {
+  const preHp = enemies.map(e => e.hp);
+  _origStepV3();
+
+  // Extra-Schaden durch Prestige (+10% pro Stufe) und Taktiker-Stil (+12%)
+  const bonusMult = (prestigeLevel * 0.10) + (commanderClass === 'tact' ? 0.12 : 0);
+  if (bonusMult > 0) {
+    enemies.forEach((e, idx) => {
+      if (preHp[idx] !== undefined && e.hp < preHp[idx]) {
+        const extra = (preHp[idx] - e.hp) * bonusMult;
+        e.hp -= extra;
+      }
+    });
+  }
+
+  // Neuer Rekord auf aktueller Karte -> Einmaliges Gold-Banner
+  if (wave > 1 && wave > (bestScores[currentMap] || 0) && !recordBannerShown) {
+    recordBannerShown = true;
+    effects.push({ x: 240, y: 120, txt: '🏆 NEUER KARTEN-REKORD!', color: '#fde047', life: 95, vy: -0.25 });
+  }
+};
+
+// 5. Frühe Welle rufen (Early Wave Call bei <= 2 verbleibenden Gegnern)
+const _origUpdateUIV3 = updateUI;
+updateUI = function() {
+  _origUpdateUIV3();
+  const wBtn = document.getElementById('btn-wave');
+  if (!wBtn || gameOver || editMode) return;
+
+  if (waveRunning && spawnQueue.length === 0 && enemies.length > 0 && enemies.length <= 2) {
+    wBtn.disabled = false;
+    wBtn.textContent = `⚡ Welle ${wave + 1} (+25💰)`;
+    wBtn.style.background = 'linear-gradient(180deg, #fde047, #eab308)';
+    wBtn.style.color = '#422006';
+  } else if (!waveRunning) {
+    wBtn.style.background = '';
+    wBtn.style.color = '';
+  }
+};
+
+const _origStartWaveV3 = startWave;
+startWave = function() {
+  const isEarlyCall = waveRunning && spawnQueue.length === 0 && enemies.length > 0 && enemies.length <= 2;
+  if (isEarlyCall) {
+    gold += 25;
+    playSfx('coin');
+    effects.push({ x: 240, y: 210, txt: '⚡ FRÜHE WELLE! +25💰', color: '#fde047', life: 60, vy: -0.5 });
+    waveRunning = false;
+  }
+  _origStartWaveV3();
+};
+
+// Backup-Keys um Prestige & Spielstil erweitern
+if (typeof BACKUP_KEYS !== 'undefined') {
+  BACKUP_KEYS.push('tdPrestige', 'tdClass');
+}
+
+window.addEventListener('DOMContentLoaded', updatePrestigeUI);
+
 resetGame();
 loop();
                                           
