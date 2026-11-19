@@ -26,6 +26,15 @@
           <option value="1" disabled>🔒 Normal (Leicht W20)</option>
           <option value="1.35" disabled>🔒 Extrem (Normal W20)</option>
         </select>
+                <select id="menu-class-sel" class="start-select-btn" onchange="changeCommanderClass()">
+          <option value="econ">💰 Stil: Ökonom (+100 Startgold)</option>
+          <option value="tact">⚔️ Stil: Taktiker (+12% Schaden)</option>
+          <option value="def">🛡️ Stil: Verteidiger (30 Leben)</option>
+        </select>
+        <button class="upg" id="btn-prestige" onclick="triggerPrestige()" style="width:100%;padding:9px;font-size:12px;">
+          ✨ Prestige: Stufe 0 (+0% DMG) – Ab Welle 40
+        </button>
+        
       </div>
 
       <button class="wave-btn start-play-btn" onclick="startFromMenu()">▶ SPIELEN</button>
