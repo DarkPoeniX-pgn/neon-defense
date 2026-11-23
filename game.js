@@ -1235,8 +1235,10 @@ function step() {
 
     document.getElementById('btn-wave').disabled = false;
     let mined = 0;
-    towers.forEach(t => { if (t.type === 'mine') mined += (t.lvl >= 6 ? 320 : 40 * t.lvl);
-    if (mined > 0) { gold += Math.floor(mined * runPerks.gold); playSfx('coin'); }
+towers.forEach(t => { 
+  if (t.type === 'mine') mined += (t.lvl >= 6 ? 320 : 40 * t.lvl); 
+});
+if (mined > 0) { gold += Math.floor(mined * runPerks.gold); playSfx('coin'); }
 
     if (wave > 0 && wave % 5 === 0 && lastPerkWave !== wave) {
       lastPerkWave = wave;
