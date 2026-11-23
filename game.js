@@ -155,7 +155,7 @@ function playSfx(type) {
 }
 
 function addHitFx(x, y, dmg, color) {
-  effects.push({ x: 240, y: 210, txt: '⚡ FRÜHE WELLE! +30💰', color: '#fde047', life: 60, vy: -0.5 });
+  effects.push({ x, y: y - 8, txt: '-' + Math.round(dmg), color, life: 26, vy: -0.7 });
   for (let i = 0; i < 4; i++) {
     const ang = Math.random() * Math.PI * 2;
     const spd = 1 + Math.random() * 2;
