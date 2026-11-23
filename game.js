@@ -478,8 +478,7 @@ function startWave() {
 
   document.getElementById('btn-wave').disabled = true;
   const count = Math.min(45, 4 + wave * 2);
-  const scale = (34 + wave * 18) * Math.pow(1.10, Math.max(0, wave - 7)) * diffMult;
-
+  const scale = (34 + wave * 18) * Math.pow(1.08, Math.max(0, wave - 7)) * diffMult;
   for (let i = 0; i < count; i++) {
     const isBoss = wave % 5 === 0 && i === count - 1;
     const isShield = !isBoss && wave >= 8 && i % 5 === 4;
