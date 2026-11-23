@@ -27,7 +27,7 @@ const mapMeta = [
 
 const towerTypes = {
   laser:   { name: '⚪ Laser', cost: 50, range: 115, dmg: 20, rate: 25, color: '#38bdf8', slow: 0, splash: 0 },
-  ice:     { name: '⚪ Eis', cost: 75, range: 105, dmg: 8, rate: 35, color: '#a5f3fc', slow: 0.5, splash: 0 },
+  ice:     { name: '⚪ Eis', cost: 75, range: 105, dmg: 8, rate: 35, color: '#a5f3fc', slow: 0.55, splash: 0 },
   sniper:  { name: '🔵 Sniper', cost: 95, range: 215, dmg: 75, rate: 85, color: '#4ade80', slow: 0, splash: 0 },
   rocket:  { name: '🔵 Rakete', cost: 110, range: 135, dmg: 45, rate: 65, color: '#f43f5e', slow: 0, splash: 55 },
   mine:    { name: '🔵 Bank', cost: 100, range: 0, dmg: 0, rate: 0, color: '#facc15', slow: 0, splash: 0 },
