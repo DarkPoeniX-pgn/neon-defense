@@ -300,7 +300,7 @@ function openOverlayFromMenu(id) {
   else if (id === 'lab-overlay') toggleLab();
   else if (id === 'rank-overlay') toggleRank();
   else if (id === 'quest-overlay') toggleQuests();
-
+}
 // === MAP & DIFFICULTY ===
 function toggleRoad() {
   closeOverlays('road-overlay');
@@ -407,7 +407,7 @@ function isPathTile(c, r) {
     if (c >= Math.min(a.c, b.c) && c <= Math.max(a.c, b.c) && r >= Math.min(a.r, b.r) && r <= Math.max(a.r, b.r)) return true;
   }
   return false;
-
+}
 // === GAME RESET & WAVE ===
 function resetGame() {
   maxHp = 20 + (tech.hp || 0) * 5 + (commanderClass === 'def' ? 10 : 0);
