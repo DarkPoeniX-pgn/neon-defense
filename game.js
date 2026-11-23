@@ -486,7 +486,7 @@ function startWave() {
     const isHealer = !isBoss && !isShield && wave >= 4 && i % 6 === 5;
     const isTank = !isBoss && !isShield && !isHealer && wave >= 3 && i % 5 === 3;
     const isFast = !isBoss && !isShield && !isHealer && !isTank && wave >= 2 && i % 4 === 0;
-    const mult = isBoss ? 6 : isTank ? 2.6 : isShield ? 1.8 : isFast ? 0.75 : 1;
+     const mult = isBoss ? 5.5 : isTank ? 2.6 : isShield ? 1.8 : isFast ? 0.75 : 1;
     const baseHp = scale * mult;
 
     spawnQueue.push({
