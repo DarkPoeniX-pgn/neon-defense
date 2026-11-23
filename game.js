@@ -292,7 +292,7 @@ function openRoadFromMenu() {
   toggleRoad();
 }
 
-function openOverlayFromMenu(id) {
+
 function openOverlayFromMenu(id) {
   const scr = document.getElementById('start-screen');
   if (scr) scr.style.display = 'none';
@@ -300,7 +300,7 @@ function openOverlayFromMenu(id) {
   else if (id === 'lab-overlay') toggleLab();
   else if (id === 'rank-overlay') toggleRank();
   else if (id === 'quest-overlay') toggleQuests();
-}
+
 // === MAP & DIFFICULTY ===
 function toggleRoad() {
   closeOverlays('road-overlay');
