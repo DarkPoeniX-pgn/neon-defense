@@ -462,7 +462,7 @@ function startWave() {
   if (isEarlyCall) {
     gold += 25;
     playSfx('coin');
-    effects.push({ x: 240, y: 210, txt: '⚡ FRÜHE WELLE! +25💰', color: '#fde047', life: 60, vy: -0.5 });
+    effects.push({ x: 240, y: 210, txt: '⚡ FRÜHE WELLE! +30💰', color: '#fde047', life: 60, vy: -0.5 });
     waveRunning = false;
   }
 
