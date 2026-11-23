@@ -41,7 +41,7 @@ const PERK_POOL = [
   { id: 'dmg', title: '⚔️ Cyber-Munition', desc: '+18% Turm-Schaden', apply: () => { runPerks.dmg += 0.18; } },
   { id: 'range', title: '🔭 Langstrecken-Optik', desc: '+20% Reichweite', apply: () => { runPerks.range += 0.20; } },
   { id: 'rate', title: '⚡ Übertaktung', desc: '+15% Feuerrate', apply: () => { runPerks.rate += 0.15; } },
-  { id: 'gold', title: '💰 Zinseszins', desc: '+25% Gold', apply: () => { runPerks.gold += 0.25; } },
+  { id: 'gold', title: '💰 Zinseszins', desc: '+25% Gold', apply: () => { runPerks.gold += 0.30; } },
   { id: 'bossDmg', title: '👑 Titanen-Jäger', desc: '+40% gegen Bosse', apply: () => { runPerks.bossDmg += 0.40; } },
   { id: 'splash', title: '💥 Ketten-Sprengstoff', desc: '+30% Explosionsradius', apply: () => { runPerks.splash += 0.30; } },
   { id: 'heal', title: '❤️ Reaktor-Reparatur', desc: '+8 Leben & +150💰', apply: () => { hp = Math.min(maxHp, hp + 8); gold += 150; } }
