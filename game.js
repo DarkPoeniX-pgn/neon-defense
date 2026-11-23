@@ -401,12 +401,13 @@ function genFeatures() {
 }
 
 function isPathTile(c, r) {
+function isPathTile(c, r) {
   for (let i = 0; i < waypoints.length - 1; i++) {
     const a = waypoints[i], b = waypoints[i + 1];
     if (c >= Math.min(a.c, b.c) && c <= Math.max(a.c, b.c) && r >= Math.min(a.r, b.r) && r <= Math.max(a.r, b.r)) return true;
   }
   return false;
-      }
+}
 // === GAME RESET & WAVE ===
 function resetGame() {
   maxHp = 20 + (tech.hp || 0) * 5 + (commanderClass === 'def' ? 10 : 0);
