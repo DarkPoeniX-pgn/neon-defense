@@ -410,7 +410,7 @@ function isPathTile(c, r) {
 function resetGame() {
   maxHp = 20 + (tech.hp || 0) * 5 + (commanderClass === 'def' ? 10 : 0);
   hp = maxHp;
-  gold = 175 + (tech.gold || 0) * 25 + (commanderClass === 'econ' ? 100 : 0);
+   gold = 200 + (tech.gold || 0) * 25 + (commanderClass === 'econ' ? 100 : 0);
   wave = 0;
   gameOver = false;
   waveRunning = false;
